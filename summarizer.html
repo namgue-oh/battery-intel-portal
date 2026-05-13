@@ -293,7 +293,7 @@ async function runSummary(){
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:[{role:'user',content:[
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:4000,messages:[{role:'user',content:[
         {type:'document',source:{type:'base64',media_type:'application/pdf',data:fileData}},
         {type:'text',text:buildPrompt()}
       ]}]})
@@ -302,7 +302,9 @@ async function runSummary(){
     clearInterval(ticker);prog.style.width='100%';
     if(data.error){throw new Error(data.error.message)}
     const raw=data.content.map(i=>i.text||'').join('');
-    const result=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    const cleaned=raw.replace(/```json|```/g,'').trim();
+    const jsonMatch=cleaned.match(/\{[\s\S]*\}/);
+    const result=JSON.parse(jsonMatch?jsonMatch[0]:cleaned);
     renderResult(result);
   }catch(e){
     clearInterval(ticker);
