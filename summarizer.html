@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF 요약기 — Battery Intel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --accent:#7c6cfa;--accent2:#a78bfa;--teal:#2dd4bf;--amber:#fbbf24;--red:#f87171;
+  --text:#f0f0f5;--text2:#9898a8;--text3:#5a5a6e;
+  --mono:'DM Mono',monospace;--sans:'Pretendard',-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:52px;background:rgba(10,10,15,0.85);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border)}
+.back-btn{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--text2);text-decoration:none;transition:color .15s}
+.back-btn:hover{color:var(--text)}
+.topbar-title{font-family:var(--mono);font-size:12px;color:var(--text3)}
+.api-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);font-family:var(--mono)}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.api-dot.ok{background:var(--teal)}
+
+.main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:3rem 2rem 5rem}
+.page-title{font-size:1.8rem;font-weight:600;letter-spacing:-.02em;margin-bottom:.5rem}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:2.5rem}
+
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:12px}
+.card-label{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;margin-bottom:1rem}
+
+.drop-zone{border:1px dashed rgba(124,108,250,0.3);border-radius:10px;padding:2.5rem;text-align:center;cursor:pointer;transition:all .2s;background:rgba(124,108,250,0.03)}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent2);background:rgba(124,108,250,0.07)}
+.drop-zone input{display:none}
+.drop-icon{font-size:2rem;margin-bottom:.75rem;display:block}
+.drop-title{font-size:14px;font-weight:500;margin-bottom:4px}
+.drop-sub{font-size:12px;color:var(--text3)}
+
+.file-preview{display:none;align-items:center;gap:12px;padding:12px 16px;background:var(--bg3);border-radius:8px;border:0.5px solid var(--border2)}
+.file-preview.show{display:flex}
+.file-icon{font-size:20px;flex-shrink:0}
+.file-name{font-size:13px;font-weight:500;color:var(--text)}
+.file-size{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.file-change{margin-left:auto;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--mono);background:none;border:none;transition:color .15s}
+.file-change:hover{color:var(--accent2)}
+
+.type-row{display:flex;gap:6px;flex-wrap:wrap}
+.type-btn{font-size:11px;padding:5px 12px;border-radius:6px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--mono);transition:all .15s}
+.type-btn:hover{border-color:var(--border2);color:var(--text)}
+.type-btn.active{background:rgba(124,108,250,0.15);border-color:rgba(124,108,250,0.4);color:var(--accent2)}
+
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt-label{font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px}
+select,input[type=text]{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);font-family:var(--sans);outline:none;transition:border-color .15s}
+select:focus,input[type=text]:focus{border-color:var(--accent)}
+textarea{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--text);font-family:var(--sans);outline:none;resize:vertical;min-height:72px;line-height:1.6;transition:border-color .15s}
+textarea:focus{border-color:var(--accent)}
+
+.run-btn{width:100%;padding:13px;background:var(--accent);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.run-btn:hover:not(:disabled){opacity:.85}
+.run-btn:disabled{opacity:.3;cursor:not-allowed}
+
+.divider{height:0.5px;background:var(--border);margin:2rem 0}
+
+.result-section{display:none}
+.result-section.show{display:block}
+
+.result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.result-title{font-size:16px;font-weight:600}
+.result-actions{display:flex;gap:6px}
+.action-btn{font-size:11px;padding:5px 12px;border-radius:6px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--mono);transition:all .15s;display:flex;align-items:center;gap:5px}
+.action-btn:hover{border-color:var(--border2);color:var(--text)}
+
+.progress-bar-wrap{height:2px;background:var(--bg3);border-radius:1px;margin-bottom:1.5rem;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--teal));border-radius:1px;transition:width .4s;width:0%}
+
+.nums-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:1rem}
+.num-card{background:var(--bg3);border-radius:8px;padding:12px 14px}
+.num-label{font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:4px}
+.num-val{font-size:18px;font-weight:500;color:var(--text)}
+
+.sec-hd{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:8px}
+.sec-hd::after{content:'';flex:1;height:0.5px;background:var(--border)}
+
+.insight-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px}
+.insight-card.high{border-left:2px solid var(--accent2);border-radius:0 10px 10px 0}
+.insight-num{display:inline-block;background:rgba(124,108,250,0.15);color:var(--accent2);font-size:10px;font-family:var(--mono);padding:1px 7px;border-radius:4px;margin-right:6px}
+.insight-title{font-size:13px;font-weight:500;margin-bottom:5px}
+.insight-body{font-size:12px;color:var(--text2);line-height:1.65}
+
+.action-list{background:var(--bg3);border-radius:10px;padding:12px 16px}
+.action-item{display:flex;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:12px;color:var(--text);line-height:1.5}
+.action-item:last-child{border-bottom:none}
+.action-check{color:var(--teal);flex-shrink:0;margin-top:1px;font-size:14px}
+
+.risk-list{background:var(--bg3);border-radius:10px;padding:12px 16px}
+.risk-item{display:flex;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:12px;color:var(--text);line-height:1.5;align-items:flex-start}
+.risk-item:last-child{border-bottom:none}
+.risk-pill{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;flex-shrink:0;white-space:nowrap}
+.rh{background:rgba(248,113,113,0.15);color:var(--red)}
+.rm{background:rgba(251,191,36,0.15);color:var(--amber)}
+.rl{background:rgba(45,212,191,0.15);color:var(--teal)}
+
+.kw-card{background:rgba(124,108,250,0.07);border:0.5px solid rgba(124,108,250,0.2);border-radius:10px;padding:14px 16px}
+.kw-body{font-size:12px;color:var(--text2);line-height:1.65}
+
+.error-msg{background:rgba(248,113,113,0.08);border:0.5px solid rgba(248,113,113,0.2);border-radius:8px;padding:14px 16px;font-size:12px;color:var(--red)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="back-btn">← 포털로</a>
+  <span class="topbar-title">PDF 보고서 요약기</span>
+  <div class="api-indicator">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiTxt">미설정</span>
+  </div>
+</nav>
+
+<main class="main">
+  <h1 class="page-title">PDF 보고서 요약기</h1>
+  <p class="page-sub">애널리스트 리포트 · 학술 논문 · 산업 리서치 · 경쟁사 IR → 경영진 보고용 인사이트 즉시 추출</p>
+
+  <div class="card">
+    <div class="card-label">01 · 파일 업로드</div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" accept=".pdf" onchange="onFile(this.files[0])">
+      <span class="drop-icon">📄</span>
+      <div class="drop-title">PDF를 드래그하거나 클릭하여 업로드</div>
+      <div class="drop-sub">최대 30MB · PDF 파일만 지원</div>
+    </div>
+    <div class="file-preview" id="filePreview">
+      <span class="file-icon">📋</span>
+      <div>
+        <div class="file-name" id="fileName"></div>
+        <div class="file-size" id="fileSize"></div>
+      </div>
+      <button class="file-change" onclick="document.getElementById('fileInput').click()">변경</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">02 · 문서 유형</div>
+    <div class="type-row" id="typeRow">
+      <button class="type-btn" data-type="analyst" onclick="setType(this)">📈 애널리스트 리포트</button>
+      <button class="type-btn" data-type="paper" onclick="setType(this)">🔬 학술 논문</button>
+      <button class="type-btn" data-type="research" onclick="setType(this)">🌐 산업 리서치</button>
+      <button class="type-btn" data-type="ir" onclick="setType(this)">🏢 경쟁사 IR</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">03 · 분석 옵션</div>
+    <div class="opts-grid" style="margin-bottom:12px">
+      <div>
+        <div class="opt-label">요약 깊이</div>
+        <select id="depth">
+          <option value="executive">경영진용 (핵심만, 빠르게)</option>
+          <option value="detailed" selected>상세 분석 (섹션별 + 인사이트)</option>
+          <option value="full">완전 분석 (전략적 함의 포함)</option>
+        </select>
+      </div>
+      <div>
+        <div class="opt-label">자사 키워드 (선택)</div>
+        <input type="text" id="keyword" placeholder="리튬 메탈, 음극재, Si-C ...">
+      </div>
+    </div>
+    <div>
+      <div class="opt-label">추가 분석 요청 (선택)</div>
+      <textarea id="extraQ" placeholder="예: 리튬 메탈 음극재 관련 내용을 중점적으로 정리해줘. 경쟁사 대비 기술 격차가 언급된 부분이 있으면 별도로 추출해줘."></textarea>
+    </div>
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="runSummary()" disabled>
+    ✦ 요약 분석 시작
+  </button>
+
+  <div class="divider" id="resultDivider" style="display:none"></div>
+
+  <div class="result-section" id="resultSection">
+    <div class="result-header">
+      <div class="result-title" id="resultTitle">분석 결과</div>
+      <div class="result-actions">
+        <button class="action-btn" onclick="copyResult()">⎘ 복사</button>
+        <button class="action-btn" onclick="resetAll()">↺ 초기화</button>
+      </div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div id="resultContent"></div>
+  </div>
+</main>
+
+<script>
+let fileData = null, selectedType = 'research';
+
+// API key check
+function checkKey(){
+  const k=localStorage.getItem('anthropic_api_key');
+  const dot=document.getElementById('apiDot'),txt=document.getElementById('apiTxt');
+  if(k&&k.startsWith('sk-ant')){dot.classList.add('ok');txt.textContent='연결됨';}
+  else{dot.classList.remove('ok');txt.textContent='미설정';}
+}
+checkKey();
+
+// Drag and drop
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])onFile(e.dataTransfer.files[0])});
+
+function onFile(f){
+  if(!f||f.type!=='application/pdf'){alert('PDF 파일만 업로드 가능합니다.');return}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    fileData=e.target.result.split(',')[1];
+    document.getElementById('fileName').textContent=f.name;
+    document.getElementById('fileSize').textContent=(f.size/1024).toFixed(0)+'KB · PDF';
+    document.getElementById('filePreview').classList.add('show');
+    document.getElementById('dropZone').style.display='none';
+    autoDetectType(f.name);
+    document.getElementById('runBtn').disabled=false;
+  };
+  reader.readAsDataURL(f);
+}
+
+function autoDetectType(name){
+  const n=name.toLowerCase();
+  let t='research';
+  if(n.includes('report')||n.includes('리포트')||n.includes('analyst'))t='analyst';
+  else if(n.includes('paper')||n.includes('논문')||n.includes('journal'))t='paper';
+  else if(n.includes('ir')||n.includes('annual')||n.includes('사업보고'))t='ir';
+  setTypeByVal(t);
+}
+
+function setType(btn){
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');selectedType=btn.dataset.type;
+}
+function setTypeByVal(t){
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===t));
+  selectedType=t;
+}
+
+const typeLabels={analyst:'애널리스트 리포트',paper:'학술 논문',research:'산업 리서치',ir:'경쟁사 IR'};
+const typeInstr={
+  analyst:'증권사 애널리스트 리포트입니다. 투자의견/목표주가, 실적 추정치, 핵심 투자포인트, 리스크 요인을 중심으로 추출하세요.',
+  paper:'학술 논문(소재·전기화학 분야)입니다. 연구 목적, 핵심 실험 결과(수치 포함), 기존 대비 개선점, 한계점, 산업적 시사점을 추출하세요.',
+  research:'산업 리서치 보고서입니다. 시장 규모·성장률, 주요 플레이어 동향, 기술 트렌드, 정책·규제 변화, 전략적 시사점을 추출하세요.',
+  ir:'경쟁사 IR/사업보고서입니다. 매출·영업이익 실적 및 가이던스, R&D 투자 방향, 신사업/전략 변화, 공급망 현황, 리스크 요인을 추출하세요.'
+};
+const depthInstr={
+  executive:'3~5개 핵심 포인트만. 각 1~2문장. 경영진이 30초에 파악 가능한 수준.',
+  detailed:'섹션별 구조화. 핵심 수치 포함. 전략적 함의 1~2개 추가.',
+  full:'전체 구조 요약 + 섹션별 상세 + 경쟁/전략적 함의 + 액션 아이템 + 리스크까지 완전 분석.'
+};
+
+function buildPrompt(){
+  const depth=document.getElementById('depth').value;
+  const kw=document.getElementById('keyword').value.trim();
+  const extra=document.getElementById('extraQ').value.trim();
+  return `당신은 이차전지·소재 전략기획 전문가입니다. 아래 PDF 문서를 분석하여 경영진 보고용 요약을 작성하세요.
+
+문서 유형: ${typeLabels[selectedType]}
+${typeInstr[selectedType]}
+요약 깊이: ${depthInstr[depth]}
+${kw?`자사 관련 키워드 [${kw}]가 언급된 내용은 keyword_hits 항목에 별도로 정리하세요.`:''}
+${extra?`추가 분석 요청: ${extra}`:''}
+
+반드시 아래 JSON 형식으로만 응답하세요. 마크다운 코드블록 없이 순수 JSON만:
+{"doc_summary":"문서 1줄 요약 (40자 이내)","key_insights":[{"title":"인사이트 제목","body":"상세 내용 (수치 포함)","importance":"high|medium"}],"numbers":[{"label":"항목","value":"값"}],"action_items":["액션 아이템"],"risks":[{"level":"high|medium|low","text":"리스크 내용"}],"keyword_hits":"${kw?'키워드 관련 내용':''}"}`;
+}
+
+async function runSummary(){
+  const key=localStorage.getItem('anthropic_api_key');
+  if(!key){alert('먼저 포털 메인에서 API 키를 설정해주세요. (index.html)');return}
+  if(!fileData){alert('PDF를 먼저 업로드해주세요.');return}
+
+  const btn=document.getElementById('runBtn');
+  btn.disabled=true;btn.textContent='⟳ 분석 중...';
+  document.getElementById('resultDivider').style.display='block';
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('resultContent').innerHTML='<div style="font-size:12px;color:var(--text3);padding:12px 0">문서를 읽고 있습니다...</div>';
+
+  const prog=document.getElementById('progressBar');
+  let pv=0;const ticker=setInterval(()=>{pv=Math.min(pv+Math.random()*7,88);prog.style.width=pv+'%'},450);
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[
+        {type:'document',source:{type:'base64',media_type:'application/pdf',data:fileData}},
+        {type:'text',text:buildPrompt()}
+      ]}]})
+    });
+    const data=await res.json();
+    clearInterval(ticker);prog.style.width='100%';
+    if(data.error){throw new Error(data.error.message)}
+    const raw=data.content.map(i=>i.text||'').join('');
+    const result=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderResult(result);
+  }catch(e){
+    clearInterval(ticker);
+    document.getElementById('resultContent').innerHTML=`<div class="error-msg">오류: ${e.message}<br><small style="opacity:.6;font-size:11px">API 키를 확인하거나 파일을 다시 업로드해주세요.</small></div>`;
+  }
+  btn.disabled=false;btn.textContent='✦ 다시 분석';
+}
+
+function renderResult(r){
+  document.getElementById('resultTitle').textContent=r.doc_summary||'분석 결과';
+  const kw=document.getElementById('keyword').value.trim();
+  let html='';
+
+  if(r.numbers?.length){
+    html+=`<div class="nums-grid">`;
+    r.numbers.forEach(n=>html+=`<div class="num-card"><div class="num-label">${n.label}</div><div class="num-val">${n.value}</div></div>`);
+    html+=`</div>`;
+  }
+  if(r.key_insights?.length){
+    html+=`<div class="sec-hd">핵심 인사이트</div>`;
+    r.key_insights.forEach((ins,i)=>{
+      html+=`<div class="insight-card${ins.importance==='high'?' high':''}"><div class="insight-title"><span class="insight-num">${i+1}</span>${ins.title}</div><div class="insight-body">${ins.body}</div></div>`;
+    });
+  }
+  if(r.action_items?.length){
+    html+=`<div class="sec-hd">액션 아이템</div><div class="action-list">`;
+    r.action_items.forEach(a=>html+=`<div class="action-item"><span class="action-check">✓</span><span>${a}</span></div>`);
+    html+=`</div>`;
+  }
+  if(r.risks?.length){
+    html+=`<div class="sec-hd">리스크 요인</div><div class="risk-list">`;
+    const lm={high:'높음',medium:'중간',low:'낮음'},lc={high:'rh',medium:'rm',low:'rl'};
+    r.risks.forEach(rk=>html+=`<div class="risk-item"><span class="risk-pill ${lc[rk.level]||'rm'}">${lm[rk.level]||rk.level}</span><span>${rk.text}</span></div>`);
+    html+=`</div>`;
+  }
+  if(kw&&r.keyword_hits&&r.keyword_hits.length>5){
+    html+=`<div class="sec-hd">키워드 히트 <span style="background:rgba(124,108,250,0.15);color:var(--accent2);font-size:10px;padding:1px 7px;border-radius:4px;margin-left:4px">${kw}</span></div>`;
+    html+=`<div class="kw-card"><div class="kw-body">${r.keyword_hits}</div></div>`;
+  }
+  document.getElementById('resultContent').innerHTML=html;
+  window._resultData=r;
+}
+
+function copyResult(){
+  const r=window._resultData;if(!r)return;
+  let t=`[${r.doc_summary}]\n\n`;
+  if(r.numbers?.length)t+='핵심 수치\n'+r.numbers.map(n=>`· ${n.label}: ${n.value}`).join('\n')+'\n\n';
+  if(r.key_insights?.length)t+='핵심 인사이트\n'+r.key_insights.map((ins,i)=>`${i+1}. ${ins.title}\n   ${ins.body}`).join('\n')+'\n\n';
+  if(r.action_items?.length)t+='액션 아이템\n'+r.action_items.map(a=>`· ${a}`).join('\n')+'\n\n';
+  if(r.risks?.length)t+='리스크\n'+r.risks.map(rk=>`[${rk.level}] ${rk.text}`).join('\n');
+  navigator.clipboard.writeText(t).then(()=>{
+    const btn=document.querySelector('.action-btn');
+    btn.textContent='✓ 복사됨';setTimeout(()=>btn.textContent='⎘ 복사',1500);
+  });
+}
+
+function resetAll(){
+  fileData=null;
+  document.getElementById('filePreview').classList.remove('show');
+  document.getElementById('dropZone').style.display='block';
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('resultDivider').style.display='none';
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('runBtn').textContent='✦ 요약 분석 시작';
+  document.getElementById('progressBar').style.width='0%';
+}
+</script>
+</body>
+</html>

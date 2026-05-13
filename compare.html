@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>소재 비교표 — Battery Intel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --accent:#7c6cfa;--accent2:#a78bfa;--teal:#2dd4bf;--amber:#fbbf24;--red:#f87171;--coral:#fb923c;
+  --text:#f0f0f5;--text2:#9898a8;--text3:#5a5a6e;
+  --mono:'DM Mono',monospace;--sans:'Pretendard',-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:52px;background:rgba(10,10,15,0.85);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border)}
+.back-btn{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;color:var(--text2);text-decoration:none;transition:color .15s}
+.back-btn:hover{color:var(--text)}
+.topbar-title{font-family:var(--mono);font-size:12px;color:var(--text3)}
+.spacer{width:80px}
+
+.main{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:3rem 2rem 5rem}
+.page-title{font-size:1.8rem;font-weight:600;letter-spacing:-.02em;margin-bottom:.5rem}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:2.5rem}
+
+/* score cards */
+.score-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2rem}
+.score-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem;transition:border-color .2s}
+.score-card.active{border-color:rgba(124,108,250,0.4)}
+.score-mat{font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px}
+.score-num{font-size:26px;font-weight:600;margin-bottom:4px}
+.score-verdict{font-size:11px;color:var(--text3);line-height:1.5}
+
+/* table */
+.tbl-wrap{overflow-x:auto;margin-bottom:2rem}
+table{width:100%;border-collapse:collapse;min-width:600px}
+thead th{font-size:11px;font-family:var(--mono);color:var(--text2);padding:10px 14px;border-bottom:0.5px solid var(--border2);text-align:center;font-weight:400;letter-spacing:.04em}
+thead th:first-child{text-align:left}
+thead th.hl{color:var(--accent2);background:rgba(124,108,250,0.05)}
+tbody td{font-size:12px;padding:10px 14px;border-bottom:0.5px solid var(--border);text-align:center;vertical-align:middle;color:var(--text)}
+tbody td:first-child{text-align:left;font-size:11px;color:var(--text3);font-family:var(--mono)}
+tbody td.hl{background:rgba(124,108,250,0.04)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,0.02)}
+
+.pill{display:inline-block;font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px}
+.ph{background:rgba(45,212,191,0.12);color:var(--teal)}
+.pm{background:rgba(251,191,36,0.12);color:var(--amber)}
+.pl{background:rgba(248,113,113,0.12);color:var(--red)}
+.pn{background:rgba(255,255,255,0.06);color:var(--text2)}
+
+.bar-cell{display:flex;align-items:center;justify-content:center;gap:6px}
+.bar-bg{width:50px;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;flex-shrink:0}
+.bar-fill{height:100%;border-radius:3px}
+.bar-val{font-size:10px;font-family:var(--mono);color:var(--text3);min-width:32px;text-align:left}
+
+/* chart section */
+.chart-section{display:grid;grid-template-columns:1fr 200px;gap:2rem;align-items:start;margin-bottom:2rem}
+.chart-wrap{position:relative;height:320px}
+.legend{display:flex;flex-direction:column;gap:12px;padding-top:40px}
+.leg-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text2)}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:2px}
+.leg-name{font-weight:500;color:var(--text);display:block;margin-bottom:2px}
+.leg-sub{font-size:10px;color:var(--text3);line-height:1.4}
+
+/* insights */
+.sec-hd{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;margin:2rem 0 1rem;display:flex;align-items:center;gap:8px}
+.sec-hd::after{content:'';flex:1;height:0.5px;background:var(--border)}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.insight-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px}
+.insight-icon{font-size:18px;margin-bottom:8px;display:block}
+.insight-title{font-size:12px;font-weight:600;margin-bottom:5px;color:var(--text)}
+.insight-body{font-size:11px;color:var(--text2);line-height:1.65}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="back-btn">← 포털로</a>
+  <span class="topbar-title">소재 사양 비교표</span>
+  <div class="spacer"></div>
+</nav>
+
+<main class="main">
+  <h1 class="page-title">음극재 소재 사양 비교</h1>
+  <p class="page-sub">리튬 메탈 · 흑연 · Si계 · Si-C 복합 — 12개 스펙 항목 + 경영진 보고용 인사이트</p>
+
+  <!-- score cards -->
+  <div class="score-grid">
+    <div class="score-card active">
+      <div class="score-mat">리튬 메탈</div>
+      <div class="score-num" style="color:#a78bfa">82<span style="font-size:13px;color:var(--text3)">/100</span></div>
+      <div class="score-verdict">성능 최고, 상업화 도전과제 명확. 차세대 핵심 소재</div>
+    </div>
+    <div class="score-card">
+      <div class="score-mat">Si-C 복합</div>
+      <div class="score-num" style="color:var(--teal)">74<span style="font-size:13px;color:var(--text3)">/100</span></div>
+      <div class="score-verdict">성능·양산성 균형. 근중기 전환 브리지 소재</div>
+    </div>
+    <div class="score-card">
+      <div class="score-mat">Si계</div>
+      <div class="score-num" style="color:var(--amber)">61<span style="font-size:13px;color:var(--text3)">/100</span></div>
+      <div class="score-verdict">에너지밀도 우수, 팽창·사이클 이슈 해결 중</div>
+    </div>
+    <div class="score-card">
+      <div class="score-mat">흑연</div>
+      <div class="score-num" style="color:var(--text2)">56<span style="font-size:13px;color:var(--text3)">/100</span></div>
+      <div class="score-verdict">양산 성숙도 최고, 성능 한계 명확. 현세대 주력</div>
+    </div>
+  </div>
+
+  <!-- detail table -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:160px">스펙 항목</th>
+          <th class="hl">리튬 메탈</th>
+          <th>Si-C 복합</th>
+          <th>Si계</th>
+          <th>흑연</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>이론 용량 (mAh/g)</td>
+          <td class="hl"><span class="pill ph">3,860</span></td>
+          <td><span class="pill pm">400~600</span></td>
+          <td><span class="pill pm">~4,200*</span></td>
+          <td><span class="pill pl">372</span></td>
+        </tr>
+        <tr>
+          <td>에너지밀도 향상</td>
+          <td class="hl">
+            <div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:95%;background:#a78bfa"></div></div><span class="bar-val">+70%↑</span></div>
+          </td>
+          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:55%;background:#2dd4bf"></div></div><span class="bar-val">+20%</span></div></td>
+          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:70%;background:#fbbf24"></div></div><span class="bar-val">+30%</span></div></td>
+          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:8%;background:#5a5a6e"></div></div><span class="bar-val">기준</span></div></td>
+        </tr>
+        <tr>
+          <td>초기 쿨롱 효율</td>
+          <td class="hl"><span class="pill pl">~98% (데드Li↑)</span></td>
+          <td><span class="pill pm">88~94%</span></td>
+          <td><span class="pill pl">75~90%</span></td>
+          <td><span class="pill ph">94~98%</span></td>
+        </tr>
+        <tr>
+          <td>사이클 수명</td>
+          <td class="hl"><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:25%;background:#a78bfa"></div></div><span class="bar-val">200~500</span></div></td>
+          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:70%;background:#2dd4bf"></div></div><span class="bar-val">500~1k</span></div></td>
+          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:45%;background:#fbbf24"></div></div><span class="bar-val">300~800</span></div></td>
+          <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:95%;background:#5a5a6e"></div></div><span class="bar-val">1k~2k</span></div></td>
+        </tr>
+        <tr>
+          <td>부피 팽창률</td>
+          <td class="hl"><span class="pill pl">수백% (덴드라이트)</span></td>
+          <td><span class="pill pm">20~40%</span></td>
+          <td><span class="pill pl">~300%</span></td>
+          <td><span class="pill ph">~10%</span></td>
+        </tr>
+        <tr>
+          <td>덴드라이트 위험</td>
+          <td class="hl"><span class="pill pl">매우 높음</span></td>
+          <td><span class="pill ph">낮음</span></td>
+          <td><span class="pill pm">중간</span></td>
+          <td><span class="pill ph">낮음</span></td>
+        </tr>
+        <tr>
+          <td>열 안정성</td>
+          <td class="hl"><span class="pill pl">낮음 (발화위험)</span></td>
+          <td><span class="pill pm">중간</span></td>
+          <td><span class="pill pm">중간</span></td>
+          <td><span class="pill ph">높음</span></td>
+        </tr>
+        <tr>
+          <td>공정 난이도</td>
+          <td class="hl"><span class="pill pl">매우 높음 (드라이룸)</span></td>
+          <td><span class="pill pm">중간</span></td>
+          <td><span class="pill pm">중간~높음</span></td>
+          <td><span class="pill ph">낮음 (성숙)</span></td>
+        </tr>
+        <tr>
+          <td>전해질 적합성</td>
+          <td class="hl"><span class="pill pl">고체전해질 필요</span></td>
+          <td><span class="pill ph">액체 호환</span></td>
+          <td><span class="pill ph">액체 호환</span></td>
+          <td><span class="pill ph">액체 호환</span></td>
+        </tr>
+        <tr>
+          <td>소재 단가</td>
+          <td class="hl"><span class="pill pl">매우 높음</span></td>
+          <td><span class="pill pm">중간~높음</span></td>
+          <td><span class="pill pm">중간</span></td>
+          <td><span class="pill ph">낮음</span></td>
+        </tr>
+        <tr>
+          <td>공급망 성숙도</td>
+          <td class="hl"><span class="pill pl">미성숙</span></td>
+          <td><span class="pill pm">개발 중</span></td>
+          <td><span class="pill pm">개발 중</span></td>
+          <td><span class="pill ph">성숙</span></td>
+        </tr>
+        <tr>
+          <td>양산 TRL</td>
+          <td class="hl"><span class="pill pl">TRL 4~5</span></td>
+          <td><span class="pill pm">TRL 6~7</span></td>
+          <td><span class="pill pm">TRL 5~7</span></td>
+          <td><span class="pill ph">TRL 9 (양산)</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:10px;color:var(--text3);margin-bottom:2rem">* Si계 이론 용량은 순수 Si 기준. 실제 적용 시 흑연 혼합 비율에 따라 상이</div>
+
+  <!-- radar chart -->
+  <div class="sec-hd">성능 프로파일 레이더</div>
+  <div class="chart-section">
+    <div class="chart-wrap">
+      <canvas id="radar" role="img" aria-label="음극재 4종 성능 레이더 차트">음극재 4종 성능 비교 레이더 차트</canvas>
+    </div>
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:#a78bfa"></div><div><span class="leg-name">리튬 메탈</span><span class="leg-sub">에너지밀도 압도적<br>안전·양산성 과제</span></div></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#2dd4bf"></div><div><span class="leg-name">Si-C 복합</span><span class="leg-sub">균형형<br>근중기 브리지 소재</span></div></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#fbbf24"></div><div><span class="leg-name">Si계</span><span class="leg-sub">에너지↑<br>팽창·사이클 개선 중</span></div></div>
+      <div class="leg-item"><div class="leg-dot" style="background:#5a5a6e"></div><div><span class="leg-name">흑연</span><span class="leg-sub">안전·양산 최강<br>성능 한계 명확</span></div></div>
+    </div>
+  </div>
+
+  <!-- insights -->
+  <div class="sec-hd">경영진 보고 핵심 인사이트</div>
+  <div class="insight-grid">
+    <div class="insight-card">
+      <span class="insight-icon">🚀</span>
+      <div class="insight-title">리튬 메탈 — 성능 게임체인저, 3~5년 상업화 타임라인</div>
+      <div class="insight-body">덴드라이트 억제·드라이룸 공정·고체전해질 매칭이 3대 병목. 기술 선점을 위한 지금의 R&D 투자가 결정적 시점.</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">🔄</span>
+      <div class="insight-title">Si-C 복합 — 현실적 근중기 캐시카우 후보</div>
+      <div class="insight-body">기존 액체전해질 공정 호환으로 양산 전환 리스크 낮음. 흑연 대비 에너지밀도 20% 향상으로 고객사 채용 가능성 높음.</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">⚠️</span>
+      <div class="insight-title">Si계 순수 음극재 — 팽창률 해결이 선결 조건</div>
+      <div class="insight-body">팽창률 300% 미해결 시 사이클 스펙 미달로 고객사 채용 불가. 바인더·전해질 첨가제 패키지 솔루션 동반 개발 필요.</div>
+    </div>
+    <div class="insight-card">
+      <span class="insight-icon">📉</span>
+      <div class="insight-title">흑연 — 2030년 이후 프리미엄 시장 점유율 하락 불가피</div>
+      <div class="insight-body">현 생산 자산 유지하되, 신규 CAPEX는 리튬 메탈·Si-C 전환 로드맵에 집중 배분 권고.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+new Chart(document.getElementById('radar'),{
+  type:'radar',
+  data:{
+    labels:['에너지밀도','사이클 수명','안전성','공정 용이성','단가 경쟁력','양산 성숙도'],
+    datasets:[
+      {label:'리튬 메탈',data:[95,30,15,20,20,25],borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,0.08)',pointBackgroundColor:'#a78bfa',borderWidth:1.5,pointRadius:3},
+      {label:'Si-C 복합',data:[65,65,60,65,55,60],borderColor:'#2dd4bf',backgroundColor:'rgba(45,212,191,0.05)',pointBackgroundColor:'#2dd4bf',borderWidth:1.5,pointRadius:3},
+      {label:'Si계',data:[78,45,45,50,55,50],borderColor:'#fbbf24',backgroundColor:'rgba(251,191,36,0.05)',pointBackgroundColor:'#fbbf24',borderWidth:1.5,pointRadius:3},
+      {label:'흑연',data:[20,90,90,95,90,95],borderColor:'#5a5a6e',backgroundColor:'rgba(90,90,110,0.05)',pointBackgroundColor:'#5a5a6e',borderWidth:1.5,pointRadius:3},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{r:{
+      min:0,max:100,
+      ticks:{stepSize:25,font:{size:10},color:'#5a5a6e',backdropColor:'transparent'},
+      pointLabels:{font:{size:11},color:'#9898a8'},
+      grid:{color:'rgba(255,255,255,0.05)'},
+      angleLines:{color:'rgba(255,255,255,0.05)'}
+    }}
+  }
+});
+</script>
+</body>
+</html>

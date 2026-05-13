@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battery Intel — 전략기획 도구 포털</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --accent: #7c6cfa;
+  --accent2: #a78bfa;
+  --teal: #2dd4bf;
+  --amber: #fbbf24;
+  --text: #f0f0f5;
+  --text2: #9898a8;
+  --text3: #5a5a6e;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Pretendard', -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* noise overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+/* top bar */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem;
+  height: 52px;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 0.5px solid var(--border);
+}
+.logo {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: .04em;
+  display: flex; align-items: center; gap: 8px;
+}
+.logo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.api-status {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text2);
+  font-family: var(--mono);
+}
+.api-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+.api-dot.ok { background: var(--teal); }
+.api-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-size: 11px;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: all .15s;
+}
+.api-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* hero */
+.hero {
+  position: relative;
+  padding: 6rem 2rem 4rem;
+  max-width: 900px; margin: 0 auto;
+  z-index: 1;
+}
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent2);
+  letter-spacing: .12em;
+  margin-bottom: 1.2rem;
+}
+.hero-title {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+  margin-bottom: 1rem;
+}
+.hero-title span { color: var(--accent2); }
+.hero-desc {
+  font-size: 15px;
+  color: var(--text2);
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+}
+.hero-stats {
+  display: flex; gap: 2rem; flex-wrap: wrap;
+}
+.stat {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.stat-val {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+}
+.stat-label { font-size: 11px; color: var(--text3); letter-spacing: .04em; }
+
+/* section */
+.section {
+  position: relative; z-index: 1;
+  max-width: 900px; margin: 0 auto;
+  padding: 0 2rem 5rem;
+}
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: .12em;
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1; height: 0.5px;
+  background: var(--border);
+}
+
+/* tool grid */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.tool-card {
+  position: relative;
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color .2s, transform .2s;
+  overflow: hidden;
+}
+.tool-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 0%, rgba(124,108,250,0.06) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.tool-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.tool-card:hover::before { opacity: 1; }
+
+.tool-card.featured { border-color: rgba(124,108,250,0.3); }
+.tool-card.featured::before { opacity: 1; }
+
+.tool-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-family: var(--mono);
+  padding: 3px 8px; border-radius: 4px;
+  margin-bottom: 1rem;
+}
+.badge-active { background: rgba(45,212,191,0.1); color: var(--teal); border: 0.5px solid rgba(45,212,191,0.2); }
+.badge-soon { background: rgba(251,191,36,0.1); color: var(--amber); border: 0.5px solid rgba(251,191,36,0.2); }
+.badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+.tool-icon {
+  font-size: 28px; margin-bottom: 12px;
+  display: block;
+}
+.tool-name {
+  font-size: 15px; font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.tool-desc {
+  font-size: 12px; color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 1.2rem;
+}
+.tool-tags {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.tool-tag {
+  font-size: 10px; font-family: var(--mono);
+  color: var(--text3);
+  border: 0.5px solid var(--border);
+  padding: 2px 7px; border-radius: 4px;
+}
+.tool-arrow {
+  position: absolute; top: 1.5rem; right: 1.5rem;
+  font-size: 16px; color: var(--text3);
+  transition: color .2s, transform .2s;
+}
+.tool-card:hover .tool-arrow { color: var(--accent2); transform: translate(2px,-2px); }
+
+/* api modal */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--bg2);
+  border: 0.5px solid var(--border2);
+  border-radius: 16px;
+  padding: 2rem;
+  width: min(420px, 90vw);
+}
+.modal-title {
+  font-size: 16px; font-weight: 600;
+  margin-bottom: 6px;
+}
+.modal-sub {
+  font-size: 12px; color: var(--text2);
+  margin-bottom: 1.5rem; line-height: 1.6;
+}
+.modal input {
+  width: 100%;
+  background: var(--bg3);
+  border: 0.5px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px; font-family: var(--mono);
+  color: var(--text);
+  margin-bottom: 12px;
+  outline: none;
+}
+.modal input:focus { border-color: var(--accent); }
+.modal-btns { display: flex; gap: 8px; }
+.btn-primary {
+  flex: 1; padding: 10px;
+  background: var(--accent);
+  color: white;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.btn-primary:hover { opacity: .85; }
+.btn-secondary {
+  padding: 10px 16px;
+  background: transparent;
+  border: 0.5px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.modal-link {
+  display: block; text-align: center;
+  font-size: 11px; color: var(--text3);
+  margin-top: 12px;
+  text-decoration: none;
+}
+.modal-link:hover { color: var(--accent2); }
+
+/* footer */
+footer {
+  position: relative; z-index: 1;
+  border-top: 0.5px solid var(--border);
+  padding: 1.5rem 2rem;
+  text-align: center;
+  font-size: 11px; font-family: var(--mono);
+  color: var(--text3);
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    BATTERY INTEL
+  </div>
+  <div class="api-status">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiStatusText">API 키 미설정</span>
+    <button class="api-btn" onclick="openModal()">키 설정</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">차세대 이차전지 소재 · 전략기획 도구 포털</div>
+  <h1 class="hero-title">더 빠른 인사이트,<br><span>더 날카로운 전략</span></h1>
+  <p class="hero-desc">리튬 메탈 음극재 개발 조직의 기획 업무를 위한 Claude 기반 분석 도구 모음. PDF 요약부터 소재 비교까지, 수작업을 자동화합니다.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-val" id="toolCount">2</span>
+      <span class="stat-label">ACTIVE TOOLS</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">~5s</span>
+      <span class="stat-label">AVG ANALYSIS TIME</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">Claude</span>
+      <span class="stat-label">POWERED BY</span>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-label">ACTIVE TOOLS</div>
+  <div class="tool-grid">
+
+    <a href="summarizer.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">📄</span>
+      <div class="tool-name">PDF 보고서 요약기</div>
+      <div class="tool-desc">애널리스트 리포트·학술 논문·산업 리서치·경쟁사 IR을 경영진 보고용으로 즉시 요약. 핵심 수치, 인사이트, 액션 아이템 자동 추출.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">애널리스트 리포트</span>
+        <span class="tool-tag">학술 논문</span>
+        <span class="tool-tag">산업 리서치</span>
+        <span class="tool-tag">IR</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
+
+    <a href="compare.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">⚗️</span>
+      <div class="tool-name">소재 사양 비교표</div>
+      <div class="tool-desc">리튬 메탈·흑연·Si계·Si-C 복합 음극재 12개 스펙 비교. 레이더 차트 + 경영진 보고용 인사이트 자동 생성.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">음극재</span>
+        <span class="tool-tag">리튬 메탈</span>
+        <span class="tool-tag">스펙 비교</span>
+        <span class="tool-tag">경영진 보고</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
+
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="section-label">COMING SOON</div>
+  <div class="tool-grid">
+
+    <div class="tool-card" style="opacity:.6;cursor:default">
+      <div class="tool-badge badge-soon"><span class="badge-dot"></span>PLANNED</div>
+      <span class="tool-icon">🗺️</span>
+      <div class="tool-name">공급망 리스크 맵</div>
+      <div class="tool-desc">소재별 공급국·업체 의존도 히트맵. 리튬 메탈박·전해질·분리막 공급망 리스크 시각화.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">공급망</span>
+        <span class="tool-tag">리스크</span>
+      </div>
+    </div>
+
+    <div class="tool-card" style="opacity:.6;cursor:default">
+      <div class="tool-badge badge-soon"><span class="badge-dot"></span>PLANNED</div>
+      <span class="tool-icon">🔬</span>
+      <div class="tool-name">특허 분석기</div>
+      <div class="tool-desc">특허 명세서 붙여넣기 → 핵심 청구항·기술적 의의·회피 설계 포인트 자동 추출.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">특허</span>
+        <span class="tool-tag">기술 분석</span>
+      </div>
+    </div>
+
+    <div class="tool-card" style="opacity:.6;cursor:default">
+      <div class="tool-badge badge-soon"><span class="badge-dot"></span>PLANNED</div>
+      <span class="tool-icon">📅</span>
+      <div class="tool-name">기술 로드맵 시각화</div>
+      <div class="tool-desc">TRL 단계별 마일스톤·경쟁사 상업화 시점·자사 개발 일정을 간트형으로 시각화.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">로드맵</span>
+        <span class="tool-tag">TRL</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  BATTERY INTEL PORTAL · 전략기획팀 내부 도구 · Claude Sonnet 4 기반
+</footer>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">Anthropic API 키 설정</div>
+    <div class="modal-sub">입력한 키는 이 브라우저에만 저장되며 외부로 전송되지 않습니다. 새 컴퓨터에서 처음 접속할 때 한 번만 입력하면 됩니다.</div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="saveKey()">저장</button>
+    </div>
+    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="modal-link">
+      API 키 발급받기 → console.anthropic.com
+    </a>
+  </div>
+</div>
+
+<script>
+function checkKey() {
+  const key = localStorage.getItem('anthropic_api_key');
+  const dot = document.getElementById('apiDot');
+  const txt = document.getElementById('apiStatusText');
+  if (key && key.startsWith('sk-ant')) {
+    dot.classList.add('ok');
+    txt.textContent = 'API 연결됨';
+  } else {
+    dot.classList.remove('ok');
+    txt.textContent = 'API 키 미설정';
+  }
+}
+
+function openModal() {
+  const existing = localStorage.getItem('anthropic_api_key');
+  if (existing) document.getElementById('apiKeyInput').value = existing;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function saveKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val) { alert('API 키를 입력해주세요.'); return; }
+  localStorage.setItem('anthropic_api_key', val);
+  closeModal();
+  checkKey();
+}
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+checkKey();
+</script>
+</body>
+</html>
