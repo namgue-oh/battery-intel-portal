@@ -718,6 +718,7 @@ function downloadPPT(){
   pptx.writeFile({fileName:`BatteryIntel_${fname}_${date.replace(/\.\s*/g,'')}.pptx`});
 }
 
+function resetAll(){
   fileData=null;
   document.getElementById('filePreview').classList.remove('show');
   document.getElementById('dropZone').style.display='block';
