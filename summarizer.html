@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root {
   --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;
@@ -727,7 +728,41 @@ function downloadPPT(){
   s5.addText(trunc(kw,120),{x:mx+0.15,y:kwY+0.32,w:mw-0.2,h:kwH-0.38,...tx(SZ.detail,false,C.gray700),valign:'top',margin:0,wrap:true});
   ftr(s5,5,TOTAL);
 
-  pptx.writeFile({fileName:`BatteryIntel_${fname}_${date.replace(/\.\s*/g,'')}.pptx`});
+  // XML 패치: 커닝 12pt + 윤곽선 투명도 90%
+  pptx.write('arraybuffer').then(async function(buf){
+    const zip=await JSZip.loadAsync(buf);
+    const slideFiles=Object.keys(zip.files).filter(f=>/ppt\/slides\/slide\d+\.xml$/.test(f));
+    for(const sf of slideFiles){
+      let xml=await zip.file(sf).async('string');
+
+      // 1. kern="1200" 추가/교체
+      xml=xml.replace(/<a:rPr([^>]*?)>/g,(m,attrs)=>{
+        if(/kern=/.test(attrs)) return m.replace(/kern="\d+"/,'kern="1200"');
+        return `<a:rPr${attrs} kern="1200">`;
+      });
+
+      // 2. <a:ln w="3175"> 내부 solidFill에 alpha val="10000" 추가 (투명도 90%)
+      xml=xml.replace(/(<a:ln\s+w="3175"[^>]*>)([\s\S]*?)(<\/a:ln>)/g,(m,open,inner,close)=>{
+        if(/a:alpha/.test(inner)) return m;
+        inner=inner.replace(
+          /(<a:srgbClr\s+val="([A-Fa-f0-9]{6})")\s*\/>/g,
+          '$1><a:alpha val="10000"/></a:srgbClr>'
+        );
+        return open+inner+close;
+      });
+
+      zip.file(sf,xml);
+    }
+
+    // 다운로드
+    const blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`BatteryIntel_${fname}_${date.replace(/\.\s*/g,'')}.pptx`;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},1000);
+  });
 }
 
 function resetAll(){
