@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>발표 자료 구조화 — Battery Intel</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --accent:#7c6cfa;--accent2:#a78bfa;--teal:#2dd4bf;--tealDk:#1B8A7A;--amber:#fbbf24;
+  --text:#f0f0f5;--text2:#9898a8;--text3:#5a5a6e;
+  --sans:'Pretendard',-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6;letter-spacing:-0.007em}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+/* topbar */
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:52px;background:rgba(10,10,15,0.9);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border)}
+.back-btn{font-size:12px;color:var(--text2);text-decoration:none;font-family:var(--sans);transition:color .15s}
+.back-btn:hover{color:var(--teal)}
+.topbar-title{font-size:13px;color:var(--text2)}
+.api-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.api-dot.ok{background:var(--teal)}
+.api-btn{padding:3px 10px;border-radius:5px;border:0.5px solid var(--border2);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;transition:all .15s}
+.api-btn:hover{border-color:var(--accent);color:var(--accent2)}
+
+/* main */
+.main{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:2.5rem 2rem 4rem}
+.page-title{font-size:22px;font-weight:600;margin-bottom:6px;letter-spacing:-.02em}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:2rem}
+
+/* 입력 카드 */
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:14px}
+.card-label{font-size:11px;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card-label span{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+
+/* 목적 버튼 */
+.purpose-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.purpose-btn{padding:10px 12px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s;text-align:left}
+.purpose-btn:hover{border-color:var(--border2);color:var(--text)}
+.purpose-btn.active{border-color:var(--teal);color:var(--teal);background:rgba(45,212,191,0.06)}
+.purpose-btn .ico{font-size:16px;margin-bottom:4px;display:block}
+.purpose-btn .lbl{font-size:11px;font-weight:500}
+.purpose-btn .sub{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* 청중 버튼 */
+.audience-grid{display:flex;flex-wrap:wrap;gap:6px}
+.aud-btn{padding:5px 12px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-family:var(--sans);cursor:pointer;transition:all .15s}
+.aud-btn:hover{border-color:var(--border2)}
+.aud-btn.active{border-color:var(--teal);color:var(--teal);background:rgba(45,212,191,0.06)}
+
+/* 슬라이드 수 */
+.slide-count-grid{display:flex;gap:8px}
+.sc-btn{padding:6px 18px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s}
+.sc-btn:hover{border-color:var(--border2)}
+.sc-btn.active{border-color:var(--teal);color:var(--teal);background:rgba(45,212,191,0.06)}
+
+/* 텍스트 입력 */
+textarea{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:12px 14px;font-size:13px;font-family:var(--sans);color:var(--text);resize:vertical;min-height:140px;outline:none;line-height:1.7;letter-spacing:-0.007em}
+textarea:focus{border-color:var(--teal)}
+textarea::placeholder{color:var(--text3)}
+input[type=text]{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:var(--sans);color:var(--text);outline:none}
+input[type=text]:focus{border-color:var(--teal)}
+input[type=text]::placeholder{color:var(--text3)}
+
+/* 실행 버튼 */
+.run-btn{width:100%;padding:14px;background:var(--teal);border:none;border-radius:10px;color:#0a0a0f;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity .15s;letter-spacing:-.01em;margin-top:6px}
+.run-btn:hover{opacity:.88}
+.run-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* 프로그레스 */
+.progress-wrap{margin-top:1rem;display:none}
+.progress-bar-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-bar{height:100%;background:var(--teal);border-radius:2px;width:0%;transition:width .4s}
+.progress-txt{font-size:11px;color:var(--text3);margin-top:6px;text-align:center}
+
+/* 결과 영역 */
+.result-section{display:none;margin-top:1.5rem}
+.result-divider{height:0.5px;background:var(--border);margin:1.5rem 0}
+
+/* 슬라이드 목록 */
+.slide-list{display:flex;flex-direction:column;gap:10px}
+.slide-item{background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;gap:1rem;align-items:flex-start}
+.slide-num{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px}
+.slide-num.cover{background:rgba(27,42,74,0.8);color:#8BAFD4;border:0.5px solid rgba(27,138,122,0.3)}
+.slide-num.content{background:rgba(27,138,122,0.12);color:var(--teal);border:0.5px solid rgba(45,212,191,0.2)}
+.slide-num.action{background:rgba(251,191,36,0.1);color:var(--amber);border:0.5px solid rgba(251,191,36,0.2)}
+.slide-body{flex:1}
+.slide-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.slide-head{font-size:12px;color:var(--teal);margin-bottom:6px;line-height:1.5}
+.slide-points{list-style:none;padding:0}
+.slide-points li{font-size:11px;color:var(--text2);padding:2px 0;display:flex;gap:6px}
+.slide-points li::before{content:'·';color:var(--text3);flex-shrink:0}
+.slide-tag{font-size:10px;color:var(--text3);border:0.5px solid var(--border);padding:2px 6px;border-radius:4px;margin-right:4px}
+
+/* 액션 버튼 */
+.result-actions{display:flex;gap:8px;margin-top:1.2rem;flex-wrap:wrap}
+.act-btn{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.act-btn:hover{border-color:var(--teal);color:var(--teal)}
+.act-btn.primary{background:var(--teal);border-color:var(--teal);color:#0a0a0f;font-weight:600}
+.act-btn.primary:hover{opacity:.88}
+
+/* 에러 */
+.error-msg{background:rgba(248,113,113,0.08);border:0.5px solid rgba(248,113,113,0.2);border-radius:8px;padding:12px 16px;font-size:12px;color:#f87171;margin-top:1rem}
+
+/* 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:16px;padding:2rem;width:min(420px,90vw)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+.modal input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:var(--sans);color:var(--text);margin-bottom:12px;outline:none}
+.modal input:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px}
+.btn-primary{flex:1;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-secondary{padding:10px 16px;background:transparent;border:0.5px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer}
+.modal-link{display:block;text-align:center;font-size:11px;color:var(--text3);margin-top:12px;text-decoration:none}
+.modal-link:hover{color:var(--accent2)}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a href="index.html" class="back-btn">← 포털로</a>
+  <span class="topbar-title">발표 자료 구조화</span>
+  <div class="api-indicator">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiTxt">미설정</span>
+    <button class="api-btn" onclick="openModal()">키 설정</button>
+  </div>
+</nav>
+
+<main class="main">
+  <h1 class="page-title">발표 자료 구조화</h1>
+  <p class="page-sub">핵심 내용을 입력하면 슬라이드 목차와 메시지 흐름을 자동으로 설계해드려요. Battery Intel PPT 양식으로 즉시 다운로드도 가능해요.</p>
+
+  <!-- 01 발표 목적 -->
+  <div class="card">
+    <div class="card-label"><span>01</span> · 발표 목적</div>
+    <div class="purpose-grid">
+      <button class="purpose-btn active" data-val="executive" onclick="selectPurpose(this)">
+        <span class="ico">📊</span>
+        <span class="lbl">경영진 보고</span>
+        <span class="sub">의사결정 지원</span>
+      </button>
+      <button class="purpose-btn" data-val="strategy" onclick="selectPurpose(this)">
+        <span class="ico">🎯</span>
+        <span class="lbl">전략 제안</span>
+        <span class="sub">방향성 설득</span>
+      </button>
+      <button class="purpose-btn" data-val="research" onclick="selectPurpose(this)">
+        <span class="ico">🔬</span>
+        <span class="lbl">연구 발표</span>
+        <span class="sub">기술/시장 분석</span>
+      </button>
+      <button class="purpose-btn" data-val="partner" onclick="selectPurpose(this)">
+        <span class="ico">🤝</span>
+        <span class="lbl">파트너 미팅</span>
+        <span class="sub">협력 논의</span>
+      </button>
+      <button class="purpose-btn" data-val="investor" onclick="selectPurpose(this)">
+        <span class="ico">💼</span>
+        <span class="lbl">투자자 설명</span>
+        <span class="sub">IR/사업 소개</span>
+      </button>
+      <button class="purpose-btn" data-val="internal" onclick="selectPurpose(this)">
+        <span class="ico">👥</span>
+        <span class="lbl">내부 공유</span>
+        <span class="sub">팀 정보 공유</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 02 청중 -->
+  <div class="card">
+    <div class="card-label"><span>02</span> · 청중</div>
+    <div class="audience-grid" id="audienceGrid">
+      <button class="aud-btn active" data-val="c-level" onclick="toggleAud(this)">C-Level 경영진</button>
+      <button class="aud-btn" data-val="strategy" onclick="toggleAud(this)">전략기획팀</button>
+      <button class="aud-btn" data-val="rd" onclick="toggleAud(this)">R&D 연구팀</button>
+      <button class="aud-btn" data-val="sales" onclick="toggleAud(this)">영업/마케팅</button>
+      <button class="aud-btn" data-val="partner" onclick="toggleAud(this)">외부 파트너사</button>
+      <button class="aud-btn" data-val="investor" onclick="toggleAud(this)">투자자</button>
+      <button class="aud-btn" data-val="oem" onclick="toggleAud(this)">OEM/셀메이커</button>
+      <button class="aud-btn" data-val="board" onclick="toggleAud(this)">이사회</button>
+    </div>
+  </div>
+
+  <!-- 03 슬라이드 수 -->
+  <div class="card">
+    <div class="card-label"><span>03</span> · 슬라이드 수</div>
+    <div class="slide-count-grid">
+      <button class="sc-btn" data-val="5" onclick="selectCount(this)">5장</button>
+      <button class="sc-btn active" data-val="8" onclick="selectCount(this)">8장</button>
+      <button class="sc-btn" data-val="10" onclick="selectCount(this)">10장</button>
+      <button class="sc-btn" data-val="12" onclick="selectCount(this)">12장</button>
+    </div>
+  </div>
+
+  <!-- 04 발표 제목 -->
+  <div class="card">
+    <div class="card-label"><span>04</span> · 발표 제목 (선택)</div>
+    <input type="text" id="presTitle" placeholder="예: 리튬 메탈 음극재 시장 진입 전략 2026">
+  </div>
+
+  <!-- 05 핵심 내용 -->
+  <div class="card">
+    <div class="card-label"><span>05</span> · 전달하고 싶은 핵심 내용</div>
+    <textarea id="content" placeholder="발표에서 전달하려는 내용을 자유롭게 적어주세요.
+
+예시:
+- 리튬 메탈 음극재 글로벌 시장은 2030년까지 연 45% 성장 예상
+- 현재 기술 성숙도 TRL 6~7 수준, 상업화까지 2~3년 소요 예상
+- 경쟁사 A사는 실리콘 음극재 전환, B사는 전고체 병행 개발 중
+- 자사는 습식 공정 기반 원가 우위, 그러나 에너지 밀도 경쟁력 보완 필요
+- 핵심 전략: 파우치 셀 OEM과의 공동개발 계약 우선 확보"></textarea>
+  </div>
+
+  <!-- 06 강조 키워드 -->
+  <div class="card">
+    <div class="card-label"><span>06</span> · 강조할 키워드 (선택)</div>
+    <input type="text" id="keywords" placeholder="예: 리튬 메탈, 음극재, 공급망, TRL, 원가 경쟁력">
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="runAnalysis()">✦ 발표 구조 설계 시작</button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-txt" id="progressTxt">Claude가 발표 구조를 설계하고 있어요...</div>
+  </div>
+
+  <div id="errorArea"></div>
+
+  <div class="result-section" id="resultSection">
+    <div class="result-divider"></div>
+    <div id="resultContent"></div>
+    <div class="result-actions" id="resultActions" style="display:none">
+      <button class="act-btn primary" onclick="downloadPPT()">↓ PPT 다운로드</button>
+      <button class="act-btn" onclick="copyResult()">⎘ 텍스트 복사</button>
+      <button class="act-btn" onclick="resetAll()">↺ 초기화</button>
+    </div>
+  </div>
+</main>
+
+<!-- API Key Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">Anthropic API 키 설정</div>
+    <div class="modal-sub">입력한 키는 이 브라우저에만 저장됩니다.</div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="saveKey()">저장</button>
+    </div>
+    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="modal-link">API 키 발급받기 →</a>
+  </div>
+</div>
+
+<script>
+// ── 상태 ──────────────────────────────────────────────────────────────────────
+let selectedPurpose = 'executive';
+let selectedAudience = ['c-level'];
+let selectedCount = '8';
+let _resultData = null;
+
+const purposeLabels = {
+  executive:'경영진 보고', strategy:'전략 제안', research:'연구 발표',
+  partner:'파트너 미팅', investor:'투자자 설명', internal:'내부 공유'
+};
+const audienceLabels = {
+  'c-level':'C-Level 경영진', strategy:'전략기획팀', rd:'R&D 연구팀',
+  sales:'영업/마케팅', partner:'외부 파트너사', investor:'투자자',
+  oem:'OEM/셀메이커', board:'이사회'
+};
+
+function selectPurpose(btn) {
+  document.querySelectorAll('.purpose-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedPurpose = btn.dataset.val;
+}
+function toggleAud(btn) {
+  btn.classList.toggle('active');
+  selectedAudience = [...document.querySelectorAll('.aud-btn.active')].map(b=>b.dataset.val);
+}
+function selectCount(btn) {
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedCount = btn.dataset.val;
+}
+
+// ── API 키 ────────────────────────────────────────────────────────────────────
+function checkKey() {
+  const k = localStorage.getItem('anthropic_api_key');
+  const dot = document.getElementById('apiDot'), txt = document.getElementById('apiTxt');
+  if(k&&k.startsWith('sk-ant')){dot.classList.add('ok');txt.textContent='연결됨';}
+  else{dot.classList.remove('ok');txt.textContent='미설정';}
+}
+function openModal() {
+  const e = localStorage.getItem('anthropic_api_key');
+  if(e) document.getElementById('apiKeyInput').value=e;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function saveKey() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if(!v){alert('API 키를 입력해주세요.');return;}
+  localStorage.setItem('anthropic_api_key',v);
+  closeModal();checkKey();
+}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── 분석 실행 ─────────────────────────────────────────────────────────────────
+async function runAnalysis() {
+  const key = localStorage.getItem('anthropic_api_key');
+  if(!key){alert('API 키를 먼저 설정해주세요.');openModal();return;}
+  const content = document.getElementById('content').value.trim();
+  if(!content){alert('핵심 내용을 입력해주세요.');return;}
+
+  const title = document.getElementById('presTitle').value.trim();
+  const keywords = document.getElementById('keywords').value.trim();
+  const purpose = purposeLabels[selectedPurpose];
+  const audience = selectedAudience.map(a=>audienceLabels[a]).join(', ') || '미지정';
+
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('errorArea').innerHTML = '';
+  document.getElementById('resultSection').style.display = 'none';
+  document.getElementById('resultActions').style.display = 'none';
+
+  const ticker = setInterval(()=>{
+    const bar = document.getElementById('progressBar');
+    const cur = parseFloat(bar.style.width)||0;
+    if(cur<85) bar.style.width = (cur+Math.random()*8)+'%';
+  }, 400);
+
+  const msgs = ['발표 구조 분석 중...', '슬라이드 목차 설계 중...', '메시지 흐름 최적화 중...', '완성 중...'];
+  let mi=0;
+  const mticker = setInterval(()=>{
+    document.getElementById('progressTxt').textContent = msgs[mi%msgs.length]; mi++;
+  }, 1800);
+
+  const prompt = `당신은 이차전지/케미칼 소재 기업의 전략기획 전문가입니다.
+아래 정보를 바탕으로 발표 자료의 슬라이드 구조를 설계해주세요.
+
+발표 목적: ${purpose}
+청중: ${audience}
+슬라이드 수: ${selectedCount}장${title?'\n발표 제목: '+title:''}${keywords?'\n강조 키워드: '+keywords:''}
+
+핵심 내용:
+${content}
+
+반드시 아래 JSON 형식으로만 응답하세요. JSON 외 다른 텍스트, 마크다운 백틱 없이 순수 JSON만 출력하세요:
+
+{
+  "title": "발표 제목",
+  "purpose": "발표 목적 한 줄 요약",
+  "key_message": "전체 발표의 핵심 메시지 (1문장, 40자 이내)",
+  "slides": [
+    {
+      "num": 1,
+      "type": "cover",
+      "title": "슬라이드 제목",
+      "head_message": "이 슬라이드의 핵심 헤드메시지 (20자 이내)",
+      "points": ["포인트1", "포인트2", "포인트3"],
+      "speaker_note": "발표자 참고사항 (선택)"
+    }
+  ]
+}
+
+슬라이드 type은 cover(표지), content(내용), data(데이터/수치), insight(인사이트), action(액션/결론) 중 하나.
+첫 슬라이드는 반드시 cover, 마지막은 action 타입으로 설계하세요.
+각 슬라이드의 head_message는 해당 슬라이드에서 청중이 기억해야 할 핵심 한 문장입니다.
+points는 2~4개로 구성하세요.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 4000,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+    const data = await res.json();
+    clearInterval(ticker); clearInterval(mticker);
+    document.getElementById('progressBar').style.width = '100%';
+
+    if(data.error) throw new Error(data.error.message);
+
+    const raw = data.content[0].text.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(raw);
+    _resultData = result;
+    renderResult(result);
+
+  } catch(e) {
+    clearInterval(ticker); clearInterval(mticker);
+    let msg = e.message||'알 수 없는 오류';
+    if(msg.includes('model')) msg = '모델을 찾을 수 없습니다.';
+    else if(msg.includes('401')||msg.includes('auth')) msg = 'API 키가 유효하지 않습니다.';
+    document.getElementById('errorArea').innerHTML = `<div class="error-msg">오류: ${msg}</div>`;
+  } finally {
+    document.getElementById('runBtn').disabled = false;
+    document.getElementById('progressWrap').style.display = 'none';
+  }
+}
+
+// ── 결과 렌더링 ───────────────────────────────────────────────────────────────
+const typeColors = {cover:'cover', content:'content', data:'content', insight:'content', action:'action'};
+const typeLabels = {cover:'표지', content:'내용', data:'데이터', insight:'인사이트', action:'액션'};
+
+function renderResult(r) {
+  const section = document.getElementById('resultSection');
+  section.style.display = 'block';
+
+  let html = `
+    <div style="margin-bottom:1.2rem">
+      <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px">${r.title||'발표 자료'}</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">${r.purpose||''}</div>
+      <div style="background:rgba(45,212,191,0.06);border:0.5px solid rgba(45,212,191,0.2);border-left:3px solid var(--teal);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--teal);line-height:1.6">
+        <span style="font-size:10px;opacity:.7;display:block;margin-bottom:3px">핵심 메시지</span>
+        ${r.key_message||''}
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);letter-spacing:.06em;margin-bottom:10px">슬라이드 구성 · ${(r.slides||[]).length}장</div>
+    <div class="slide-list">`;
+
+  (r.slides||[]).forEach((s,i) => {
+    const cls = typeColors[s.type]||'content';
+    html += `
+      <div class="slide-item">
+        <div class="slide-num ${cls}">${s.num||i+1}</div>
+        <div class="slide-body">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <div class="slide-title">${s.title||''}</div>
+            <span class="slide-tag">${typeLabels[s.type]||s.type}</span>
+          </div>
+          ${s.head_message?`<div class="slide-head">"${s.head_message}"</div>`:''}
+          ${(s.points||[]).length?`<ul class="slide-points">${s.points.map(p=>`<li>${p}</li>`).join('')}</ul>`:''}
+          ${s.speaker_note?`<div style="font-size:10px;color:var(--text3);margin-top:6px;padding-top:6px;border-top:0.5px solid var(--border)">💬 ${s.speaker_note}</div>`:''}
+        </div>
+      </div>`;
+  });
+
+  html += `</div>`;
+  document.getElementById('resultContent').innerHTML = html;
+  document.getElementById('resultActions').style.display = 'flex';
+}
+
+// ── PPT 다운로드 ──────────────────────────────────────────────────────────────
+function downloadPPT() {
+  const r = _resultData;
+  if(!r){alert('먼저 분석을 실행해주세요.');return;}
+  if(typeof PptxGenJS==='undefined'){alert('PPT 라이브러리 로딩 중입니다.');return;}
+
+  const date = new Date().toLocaleDateString('ko-KR');
+  const C = {navy:'1B2A4A',navyDk:'0F2238',teal:'1B8A7A',tealLt:'E8F5F3',tealMd:'9FE1CB',
+    white:'FFFFFF',gray50:'F8F9FA',gray200:'E9ECEF',gray700:'495057',gray900:'212529',
+    red:'C0392B',amber:'E8A000'};
+  const W=27.517*0.3937, H=19.05*0.3937, HDR_H=2.26*0.3937, SY=HDR_H+0.12;
+  const SZ={title:22,head:16,body:13,detail:11};
+  const SP=-0.7, KR='맑은 고딕', EN='Arial';
+  const trunc=(s,n)=>(!s?'':s.length>n?s.slice(0,n-1)+'…':s);
+  const mx=0.3, mw=W-0.6;
+  const tx=(sz,bold,color,eng)=>({fontFace:eng?EN:KR,fontSize:sz,bold:!!bold,color:color||C.gray900,charSpacing:SP,outline:{color:color||C.gray900,size:0.25,transparency:90}});
+
+  function hdr(s,num,name,title){
+    s.addShape('rect',{x:0,y:0,w:W,h:HDR_H,fill:{color:C.navy},line:{color:C.navy}});
+    const tagW=1.4,tagH=HDR_H*0.82,tagY=(HDR_H-tagH)/2;
+    s.addShape('rect',{x:0.22,y:tagY,w:tagW,h:tagH,fill:{color:C.teal},line:{color:C.teal}});
+    s.addText(num,{x:0.22,y:tagY,w:tagW,h:tagH*0.42,...tx(9,true,C.tealLt,true),align:'center',valign:'middle',margin:0});
+    s.addText(name,{x:0.22,y:tagY+tagH*0.42,w:tagW,h:tagH*0.58,...tx(11,true,C.white),align:'center',valign:'middle',margin:0});
+    s.addText(title,{x:0.22+tagW+0.18,y:0,w:W-tagW-0.7,h:HDR_H,...tx(SZ.title,true,C.white),valign:'middle',margin:0});
+  }
+  function ftr(s,n,t){
+    s.addText('Battery Intel | Powered by Claude API | 내부 배포용',{x:0.3,y:H-0.28,w:W*0.7,h:0.22,...tx(SZ.detail,false,C.gray700),align:'left',margin:0});
+    s.addText(`${n} / ${t}`,{x:W-0.7,y:H-0.28,w:0.5,h:0.22,...tx(SZ.detail,false,C.gray700,true),align:'right',margin:0});
+  }
+
+  const pptx = new PptxGenJS();
+  pptx.defineLayout({name:'A4_LAND',width:W,height:H});
+  pptx.layout='A4_LAND';
+  const TOTAL = r.slides.length;
+
+  r.slides.forEach((slide, idx) => {
+    const s = pptx.addSlide();
+    s.background = {color: C.white};
+    const n = idx+1;
+
+    if(slide.type === 'cover') {
+      // 표지 슬라이드
+      s.addShape('rect',{x:0,y:0,w:2.6,h:H,fill:{color:C.navy},line:{color:C.navy}});
+      s.addShape('rect',{x:0,y:H*0.72,w:2.6,h:H*0.28,fill:{color:C.navyDk},line:{color:C.navyDk}});
+      s.addShape('rect',{x:2.55,y:0,w:0.08,h:H,fill:{color:C.teal},line:{color:C.teal}});
+      s.addText('BATTERY',{x:0.18,y:0.55,w:2.2,h:0.42,...tx(20,true,C.white,true),align:'left',margin:0});
+      s.addText('INTEL',  {x:0.18,y:0.94,w:2.2,h:0.42,...tx(20,true,C.teal,true), align:'left',margin:0});
+      s.addShape('line',  {x:0.18,y:1.4, w:2.1,h:0,line:{color:C.teal,width:1}});
+      s.addText('전략기획 분석 도구 포털',{x:0.18,y:1.5,w:2.2,h:0.35,...tx(SZ.detail,false,C.gray900),align:'left',margin:0});
+      s.addShape('line',{x:0.18,y:H*0.73,w:2.1,h:0,line:{color:C.teal,width:0.5}});
+      s.addText('Battery Intel v2.0',{x:0.18,y:H*0.74,w:2.2,h:0.3,...tx(SZ.detail-1,false,'8BAFD4',true),align:'left',margin:0});
+      s.addText(date,{x:0.18,y:H*0.79,w:2.2,h:0.3,...tx(SZ.detail-1,false,'5a7a9a',true),align:'left',margin:0});
+
+      const cx=2.9,cw=W-cx-0.35;
+      s.addShape('rect',{x:cx,y:0.65,w:1.6,h:0.32,fill:{color:C.tealLt},line:{color:C.teal,width:0.5}});
+      s.addShape('rect',{x:cx,y:0.65,w:0.05,h:0.32,fill:{color:C.teal},line:{color:C.teal}});
+      s.addText(purposeLabels[selectedPurpose]||'발표 자료',{x:cx+0.1,y:0.65,w:1.5,h:0.32,...tx(SZ.detail,true,C.teal),align:'left',valign:'middle',margin:0});
+      s.addText(trunc(r.title,55),{x:cx,y:1.1,w:cw,h:1.3,...tx(24,true,C.navy),align:'left',valign:'top',margin:0,wrap:true});
+      s.addShape('line',{x:cx,y:2.6,w:cw,h:0,line:{color:C.gray200,width:0.5}});
+      s.addText(`발표 목적: ${r.purpose||''}`,{x:cx,y:2.7,w:cw,h:0.28,...tx(SZ.detail-1,false,C.gray900),align:'left',margin:0});
+      s.addShape('line',{x:cx,y:3.05,w:cw,h:0,line:{color:C.gray200,width:0.5}});
+      // 핵심 메시지 박스
+      s.addShape('rect',{x:cx,y:3.2,w:cw,h:0.82,fill:{color:'F0FAF8'},line:{color:C.teal,width:0.5}});
+      s.addShape('rect',{x:cx,y:3.2,w:0.05,h:0.82,fill:{color:C.teal},line:{color:C.teal}});
+      s.addText('핵심 메시지',{x:cx+0.12,y:3.24,w:cw-0.14,h:0.2,...tx(SZ.detail-1,true,C.teal),align:'left',margin:0});
+      s.addText(trunc(r.key_message||'',80),{x:cx+0.12,y:3.44,w:cw-0.14,h:0.52,...tx(SZ.detail,false,C.navy),align:'left',valign:'top',margin:0,wrap:true});
+      // Powered by
+      s.addShape('rect',{x:cx,y:H-0.62,w:2.1,h:0.34,fill:{color:C.teal},line:{color:C.teal}});
+      s.addText('Powered by Claude API',{x:cx,y:H-0.62,w:2.1,h:0.34,...tx(SZ.detail,false,C.white,true),align:'center',valign:'middle',margin:0});
+
+    } else {
+      // 내용 슬라이드
+      const sectionNames = {content:'내용',data:'데이터',insight:'인사이트',action:'액션아이템'};
+      hdr(s, String(n).padStart(2,'0'), sectionNames[slide.type]||'내용', slide.title||'');
+
+      // 헤드 메시지 박스
+      if(slide.head_message) {
+        s.addShape('rect',{x:mx,y:SY,w:mw,h:0.72,fill:{color:C.tealLt},line:{color:C.teal,width:0.5}});
+        s.addShape('rect',{x:mx,y:SY,w:0.06,h:0.72,fill:{color:C.teal},line:{color:C.teal}});
+        s.addText('핵심 메시지',{x:mx+0.14,y:SY+0.04,w:1.2,h:0.2,...tx(SZ.detail-1,true,C.teal),align:'left',margin:0});
+        s.addText(trunc(slide.head_message,60),{x:mx+0.14,y:SY+0.24,w:mw-0.2,h:0.42,...tx(SZ.head,true,C.navy),valign:'top',margin:0,wrap:true});
+      }
+
+      // 포인트 카드들
+      const points = slide.points||[];
+      const startY = SY + (slide.head_message?0.82:0);
+      const availH = H - startY - 0.38;
+      const cardH = availH/Math.max(points.length,1) - 0.08;
+      const isAction = slide.type==='action';
+
+      points.forEach((pt,pi) => {
+        const cy = startY + pi*(cardH+0.08);
+        const color = isAction ? C.teal : (pi===0?C.teal:C.navy);
+        s.addShape('rect',{x:mx,y:cy,w:0.42,h:cardH,fill:{color},line:{color}});
+        s.addText(isAction?'✓':`${pi+1}`,{x:mx,y:cy,w:0.42,h:cardH,...tx(SZ.body,true,C.white,true),align:'center',valign:'middle',margin:0});
+        s.addShape('rect',{x:mx+0.42,y:cy,w:mw-0.42,h:cardH,fill:{color:pi===0&&!isAction?'F0FAF8':C.gray50},line:{color:pi===0&&!isAction?C.teal:C.gray200,width:0.5}});
+        s.addText(trunc(pt,80),{x:mx+0.55,y:cy,w:mw-0.65,h:cardH,...tx(SZ.body,false,C.gray900),valign:'middle',margin:0,wrap:true});
+      });
+
+      ftr(s,n,TOTAL);
+    }
+  });
+
+  // XML 패치 (커닝 + 윤곽선 투명도)
+  pptx.write('arraybuffer').then(async function(buf){
+    const zip = await JSZip.loadAsync(buf);
+    const slideFiles = Object.keys(zip.files).filter(f=>/ppt\/slides\/slide\d+\.xml$/.test(f));
+    for(const sf of slideFiles){
+      let xml = await zip.file(sf).async('string');
+      xml = xml.replace(/<a:rPr([^>]*?)>/g,(m,attrs)=>{
+        if(/kern=/.test(attrs)) return m.replace(/kern="\d+"/,'kern="1200"');
+        return `<a:rPr${attrs} kern="1200">`;
+      });
+      xml = xml.replace(/(<a:ln\s+w="3175"[^>]*>)([\s\S]*?)(<\/a:ln>)/g,(m,open,inner,close)=>{
+        if(/a:alpha/.test(inner)) return m;
+        inner = inner.replace(/(<a:srgbClr\s+val="([A-Fa-f0-9]{6})")\s*\/>/g,'$1><a:alpha val="10000"/></a:srgbClr>');
+        return open+inner+close;
+      });
+      zip.file(sf,xml);
+    }
+    const blob = await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`BatteryIntel_발표_${date.replace(/\.\s*/g,'')}.pptx`;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},1000);
+  });
+}
+
+// ── 유틸 ──────────────────────────────────────────────────────────────────────
+function copyResult() {
+  if(!_resultData) return;
+  const r = _resultData;
+  let txt = `${r.title}\n핵심 메시지: ${r.key_message}\n\n`;
+  (r.slides||[]).forEach(s=>{
+    txt += `[${s.num}] ${s.title}\n`;
+    if(s.head_message) txt += `  → ${s.head_message}\n`;
+    (s.points||[]).forEach(p=>txt+=`  · ${p}\n`);
+    txt += '\n';
+  });
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn = document.querySelector('.act-btn:not(.primary)');
+    const orig = btn.textContent;
+    btn.textContent='✓ 복사됨';
+    setTimeout(()=>btn.textContent=orig, 1500);
+  });
+}
+
+function resetAll() {
+  _resultData = null;
+  document.getElementById('content').value='';
+  document.getElementById('presTitle').value='';
+  document.getElementById('keywords').value='';
+  document.getElementById('resultSection').style.display='none';
+  document.getElementById('errorArea').innerHTML='';
+}
+
+checkKey();
+</script>
+</body>
+</html>
