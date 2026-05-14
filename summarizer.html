@@ -6,6 +6,7 @@
 <title>PDF 요약기 — Battery Intel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Pretendard:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PptxGenJS/3.12.0/pptxgen.bundle.js"></script>
 <style>
 :root {
   --bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;
@@ -187,6 +188,8 @@ textarea:focus{border-color:var(--accent)}
       <div class="result-title" id="resultTitle">분석 결과</div>
       <div class="result-actions">
         <button class="action-btn" onclick="copyResult()">⎘ 복사</button>
+        <button class="action-btn" onclick="downloadPDF()">↓ PDF</button>
+        <button class="action-btn" onclick="downloadPPT()">↓ PPT</button>
         <button class="action-btn" onclick="resetAll()">↺ 초기화</button>
       </div>
     </div>
@@ -416,7 +419,140 @@ function copyResult(){
   });
 }
 
-function resetAll(){
+function downloadPDF(){
+  const r=window._resultData;if(!r){alert('먼저 분석을 실행해주세요.');return}
+  const date=new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','');
+  const fname=document.getElementById('fileName').textContent.replace('.pdf','')||'보고서';
+
+  const html=`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Noto Sans KR',sans-serif;color:#1a1a2e;background:white;padding:40px;max-width:800px;margin:0 auto}
+    .header{border-bottom:3px solid #7c6cfa;padding-bottom:16px;margin-bottom:28px}
+    .badge{display:inline-block;background:#7c6cfa;color:white;font-size:10px;padding:3px 10px;border-radius:4px;margin-bottom:8px}
+    .title{font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+    .meta{font-size:11px;color:#888;margin-top:6px}
+    .section{margin-bottom:24px}
+    .sec-title{font-size:11px;font-weight:700;color:#7c6cfa;letter-spacing:.1em;margin-bottom:12px;text-transform:uppercase;border-left:3px solid #7c6cfa;padding-left:8px}
+    .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px}
+    .num-box{background:#f8f7ff;border-radius:8px;padding:12px;text-align:center}
+    .num-label{font-size:10px;color:#888;margin-bottom:4px}
+    .num-val{font-size:18px;font-weight:700;color:#7c6cfa}
+    .insight{background:#f8f7ff;border-left:3px solid #7c6cfa;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:8px}
+    .insight.high{border-color:#7c6cfa;background:#f0eeff}
+    .insight-title{font-size:13px;font-weight:600;margin-bottom:4px}
+    .insight-body{font-size:12px;color:#555;line-height:1.6}
+    .action-list{list-style:none}
+    .action-list li{font-size:12px;padding:7px 0;border-bottom:0.5px solid #eee;display:flex;gap:8px}
+    .action-list li::before{content:'✓';color:#2dd4bf;flex-shrink:0;font-weight:700}
+    .risk-list{list-style:none}
+    .risk-list li{font-size:12px;padding:7px 0;border-bottom:0.5px solid #eee;display:flex;gap:8px;align-items:flex-start}
+    .rpill{font-size:10px;padding:2px 8px;border-radius:4px;flex-shrink:0}
+    .rh{background:#fee2e2;color:#dc2626}.rm{background:#fef3c7;color:#d97706}.rl{background:#d1fae5;color:#059669}
+    .kw-box{background:#f0eeff;border-radius:8px;padding:12px 14px;font-size:12px;color:#555;line-height:1.6}
+    .footer{margin-top:32px;padding-top:12px;border-top:0.5px solid #eee;font-size:10px;color:#aaa;text-align:center}
+  </style></head><body>
+  <div class="header">
+    <div class="badge">Battery Intel · 전략기획 분석</div>
+    <div class="title">${r.doc_summary||fname}</div>
+    <div class="meta">분석일: ${date} &nbsp;·&nbsp; 원본: ${fname}.pdf</div>
+  </div>
+  ${r.numbers?.length?`<div class="section"><div class="sec-title">핵심 수치</div><div class="nums">${r.numbers.map(n=>`<div class="num-box"><div class="num-label">${n.label}</div><div class="num-val">${n.value}</div></div>`).join('')}</div></div>`:''}
+  ${r.key_insights?.length?`<div class="section"><div class="sec-title">핵심 인사이트</div>${r.key_insights.map((ins,i)=>`<div class="insight ${ins.importance==='high'?'high':''}"><div class="insight-title">${i+1}. ${ins.title}</div><div class="insight-body">${ins.body}</div></div>`).join('')}</div>`:''}
+  ${r.action_items?.length?`<div class="section"><div class="sec-title">액션 아이템</div><ul class="action-list">${r.action_items.map(a=>`<li>${a}</li>`).join('')}</ul></div>`:''}
+  ${r.risks?.length?`<div class="section"><div class="sec-title">리스크 요인</div><ul class="risk-list">${r.risks.map(rk=>`<li><span class="rpill ${rk.level==='high'?'rh':rk.level==='low'?'rl':'rm'}">${rk.level==='high'?'높음':rk.level==='low'?'낮음':'중간'}</span>${rk.text}</li>`).join('')}</ul></div>`:''}
+  ${r.keyword_hits&&r.keyword_hits.length>5?`<div class="section"><div class="sec-title">키워드 관련 내용</div><div class="kw-box">${r.keyword_hits}</div></div>`:''}
+  <div class="footer">Battery Intel Portal · Claude Sonnet 기반 자동 분석 · 내부 참고용</div>
+  </body></html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const w=window.open(url,'_blank');
+  setTimeout(()=>{w.print();},800);
+}
+
+function downloadPPT(){
+  const r=window._resultData;if(!r){alert('먼저 분석을 실행해주세요.');return}
+  if(typeof PptxGenJS==='undefined'){alert('PPT 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.');return}
+
+  const date=new Date().toLocaleDateString('ko-KR');
+  const fname=document.getElementById('fileName').textContent.replace('.pdf','')||'보고서';
+  const pptx=new PptxGenJS();
+  pptx.layout='LAYOUT_16x9';
+  pptx.theme={headFontFace:'맑은 고딕',bodyFontFace:'맑은 고딕'};
+
+  const C={accent:'7C6CFA',light:'F0EEFF',dark:'1A1A2E',gray:'888888',white:'FFFFFF',teal:'2DD4BF',red:'DC2626',amber:'D97706',green:'059669'};
+
+  // Slide 1 - 표지
+  const s1=pptx.addSlide();
+  s1.background={color:C.dark};
+  s1.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
+  s1.addText('BATTERY INTEL',{x:0.6,y:0.5,w:8,h:0.4,fontSize:11,color:C.accent,bold:true,charSpacing:4});
+  s1.addText(r.doc_summary||fname,{x:0.6,y:1.2,w:8.5,h:1.8,fontSize:28,color:C.white,bold:true,wrap:true});
+  s1.addText(`분석일: ${date}  ·  원본: ${fname}.pdf`,{x:0.6,y:4.4,w:8,h:0.4,fontSize:11,color:C.gray});
+  s1.addShape(pptx.ShapeType.rect,{x:0,y:4.92,w:'100%',h:0.08,fill:{color:C.accent}});
+
+  // Slide 2 - 핵심 수치
+  if(r.numbers?.length){
+    const s2=pptx.addSlide();
+    s2.background={color:C.white};
+    s2.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
+    s2.addText('핵심 수치',{x:0.6,y:0.25,w:8,h:0.5,fontSize:20,color:C.dark,bold:true});
+    const cols=Math.min(r.numbers.length,4);
+    const w=8.5/cols;
+    r.numbers.slice(0,4).forEach((n,i)=>{
+      const x=0.6+i*w;
+      s2.addShape(pptx.ShapeType.rect,{x,y:1.1,w:w-0.2,h:1.6,fill:{color:C.light},line:{color:'E8E4FF',width:1},rectRadius:0.1});
+      s2.addText(n.label,{x,y:1.2,w:w-0.2,h:0.4,fontSize:10,color:C.gray,align:'center'});
+      s2.addText(n.value,{x,y:1.7,w:w-0.2,h:0.7,fontSize:20,color:C.accent,bold:true,align:'center'});
+    });
+  }
+
+  // Slide 3 - 핵심 인사이트
+  if(r.key_insights?.length){
+    const s3=pptx.addSlide();
+    s3.background={color:C.white};
+    s3.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
+    s3.addText('핵심 인사이트',{x:0.6,y:0.25,w:8,h:0.5,fontSize:20,color:C.dark,bold:true});
+    r.key_insights.slice(0,4).forEach((ins,i)=>{
+      const y=1.0+i*0.95;
+      s3.addShape(pptx.ShapeType.rect,{x:0.6,y,w:0.06,h:0.7,fill:{color:ins.importance==='high'?C.accent:C.teal}});
+      s3.addText(`${i+1}. ${ins.title}`,{x:0.8,y:y+0.02,w:8.6,h:0.3,fontSize:12,color:C.dark,bold:true});
+      s3.addText(ins.body,{x:0.8,y:y+0.32,w:8.6,h:0.55,fontSize:10,color:'555555',wrap:true});
+    });
+  }
+
+  // Slide 4 - 액션 아이템 + 리스크
+  if(r.action_items?.length||r.risks?.length){
+    const s4=pptx.addSlide();
+    s4.background={color:C.white};
+    s4.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
+
+    if(r.action_items?.length){
+      s4.addText('액션 아이템',{x:0.6,y:0.25,w:4,h:0.4,fontSize:16,color:C.dark,bold:true});
+      r.action_items.slice(0,5).forEach((a,i)=>{
+        s4.addShape(pptx.ShapeType.rect,{x:0.6,y:0.85+i*0.65,w:4.2,h:0.55,fill:{color:'F0FDF4'},line:{color:'D1FAE5',width:1},rectRadius:0.05});
+        s4.addText('✓',{x:0.7,y:0.88+i*0.65,w:0.3,h:0.4,fontSize:11,color:C.teal,bold:true});
+        s4.addText(a,{x:1.05,y:0.88+i*0.65,w:3.6,h:0.4,fontSize:10,color:C.dark,wrap:true});
+      });
+    }
+    if(r.risks?.length){
+      s4.addText('리스크 요인',{x:5.2,y:0.25,w:4,h:0.4,fontSize:16,color:C.dark,bold:true});
+      const lc={high:C.red,medium:C.amber,low:C.green};
+      const lt={high:'높음',medium:'중간',low:'낮음'};
+      r.risks.slice(0,4).forEach((rk,i)=>{
+        s4.addShape(pptx.ShapeType.rect,{x:5.2,y:0.85+i*0.75,w:4.2,h:0.65,fill:{color:'FAFAFA'},line:{color:'EEEEEE',width:1},rectRadius:0.05});
+        s4.addShape(pptx.ShapeType.rect,{x:5.2,y:0.85+i*0.75,w:0.7,h:0.65,fill:{color:lc[rk.level]||C.amber},rectRadius:0.05});
+        s4.addText(lt[rk.level]||rk.level,{x:5.2,y:0.97+i*0.75,w:0.7,h:0.3,fontSize:9,color:C.white,align:'center',bold:true});
+        s4.addText(rk.text,{x:6.0,y:0.9+i*0.75,w:3.3,h:0.5,fontSize:10,color:C.dark,wrap:true});
+      });
+    }
+  }
+
+  pptx.writeFile({fileName:`Battery_Intel_${fname}_${date.replace(/\//g,'')}.pptx`});
+}
+
   fileData=null;
   document.getElementById('filePreview').classList.remove('show');
   document.getElementById('dropZone').style.display='block';
