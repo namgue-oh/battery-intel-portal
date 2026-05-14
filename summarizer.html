@@ -478,79 +478,192 @@ function downloadPPT(){
 
   const date=new Date().toLocaleDateString('ko-KR');
   const fname=document.getElementById('fileName').textContent.replace('.pdf','')||'보고서';
+  const docType=document.querySelector('.type-btn.active')?.textContent?.replace(/^[^\s]+\s/,'')||'보고서';
+  const depth=document.getElementById('depth').options[document.getElementById('depth').selectedIndex].text||'';
   const pptx=new PptxGenJS();
   pptx.layout='LAYOUT_16x9';
-  pptx.theme={headFontFace:'맑은 고딕',bodyFontFace:'맑은 고딕'};
 
-  const C={accent:'7C6CFA',light:'F0EEFF',dark:'1A1A2E',gray:'888888',white:'FFFFFF',teal:'2DD4BF',red:'DC2626',amber:'D97706',green:'059669'};
+  // ─── 색상 팔레트 ───────────────────────────────────────────────────────
+  const C={
+    navy:'0F2240', teal:'0D9488', tealLight:'E6F4F2',
+    white:'FFFFFF', gray50:'F8F9FA', gray100:'F1F3F5',
+    gray300:'DEE2E6', gray500:'868E96', gray700:'495057', gray900:'212529',
+    red:'DC2626', amber:'D97706'
+  };
+  const ms=()=>({type:'outer',color:'000000',opacity:0.08,blur:6,offset:2,angle:135});
 
-  // Slide 1 - 표지
+  // 공통 헤더 (내지)
+  function hdr(s,tag,title){
+    s.addShape('rect',{x:0,y:0,w:10,h:0.55,fill:{color:C.navy},line:{color:C.navy}});
+    s.addShape('rect',{x:0.35,y:0.1,w:0.85,h:0.28,fill:{color:C.teal},line:{color:C.teal}});
+    s.addText(tag,{x:0.35,y:0.1,w:0.85,h:0.28,fontSize:7,bold:true,color:C.white,align:'center',valign:'middle',margin:0});
+    s.addText(title,{x:1.3,y:0.1,w:7.5,h:0.32,fontSize:13,bold:true,color:C.white,align:'left',valign:'middle',margin:0});
+  }
+
+  // 공통 푸터
+  function ftr(s,n,t){
+    s.addShape('rect',{x:0.4,y:5.35,w:9.2,h:0.01,fill:{color:C.gray300},line:{color:C.gray300}});
+    s.addText('Battery Intel | Powered by Claude API | 내부 배포용',{x:0.4,y:5.37,w:7,h:0.2,fontSize:7,color:C.gray500,align:'left',margin:0});
+    s.addText(`${n} / ${t}`,{x:8.6,y:5.37,w:1,h:0.2,fontSize:7,color:C.gray500,align:'right',margin:0});
+  }
+
+  // ── SLIDE 1: 표지 ──────────────────────────────────────────────────────
+  const total=5;
   const s1=pptx.addSlide();
-  s1.background={color:C.dark};
-  s1.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
-  s1.addText('BATTERY INTEL',{x:0.6,y:0.5,w:8,h:0.4,fontSize:11,color:C.accent,bold:true,charSpacing:4});
-  s1.addText(r.doc_summary||fname,{x:0.6,y:1.2,w:8.5,h:1.8,fontSize:28,color:C.white,bold:true,wrap:true});
-  s1.addText(`분석일: ${date}  ·  원본: ${fname}.pdf`,{x:0.6,y:4.4,w:8,h:0.4,fontSize:11,color:C.gray});
-  s1.addShape(pptx.ShapeType.rect,{x:0,y:4.92,w:'100%',h:0.08,fill:{color:C.accent}});
+  s1.background={color:C.white};
+  s1.addShape('rect',{x:0,y:0,w:3.8,h:5.625,fill:{color:C.navy},line:{color:C.navy}});
+  s1.addShape('rect',{x:3.6,y:0,w:0.2,h:5.625,fill:{color:C.teal},line:{color:C.teal}});
+  s1.addText('BATTERY',{x:0.3,y:0.55,w:3.2,h:0.5,fontSize:22,bold:true,color:C.white,align:'left',charSpacing:4,margin:0});
+  s1.addText('INTEL',{x:0.3,y:1.0,w:3.2,h:0.45,fontSize:22,bold:true,color:C.teal,align:'left',charSpacing:4,margin:0});
+  s1.addShape('rect',{x:0.3,y:1.52,w:2.5,h:0.03,fill:{color:'4B6A9B'},line:{color:'4B6A9B'}});
+  s1.addText('전략기획 분석 도구 포털',{x:0.3,y:1.6,w:3.2,h:0.3,fontSize:9,color:'8BAFD4',align:'left',margin:0});
 
-  // Slide 2 - 핵심 수치
-  if(r.numbers?.length){
-    const s2=pptx.addSlide();
-    s2.background={color:C.white};
-    s2.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
-    s2.addText('핵심 수치',{x:0.6,y:0.25,w:8,h:0.5,fontSize:20,color:C.dark,bold:true});
-    const cols=Math.min(r.numbers.length,4);
-    const w=8.5/cols;
-    r.numbers.slice(0,4).forEach((n,i)=>{
-      const x=0.6+i*w;
-      s2.addShape(pptx.ShapeType.rect,{x,y:1.1,w:w-0.2,h:1.6,fill:{color:C.light},line:{color:'E8E4FF',width:1},rectRadius:0.1});
-      s2.addText(n.label,{x,y:1.2,w:w-0.2,h:0.4,fontSize:10,color:C.gray,align:'center'});
-      s2.addText(n.value,{x,y:1.7,w:w-0.2,h:0.7,fontSize:20,color:C.accent,bold:true,align:'center'});
+  // 문서 유형 태그
+  s1.addShape('rect',{x:4.2,y:1.0,w:1.6,h:0.32,fill:{color:C.tealLight},line:{color:C.teal}});
+  s1.addText('PDF 분석 보고서',{x:4.2,y:1.0,w:1.6,h:0.32,fontSize:8.5,bold:true,color:C.teal,align:'center',valign:'middle',margin:0});
+
+  // 제목
+  s1.addText(r.doc_summary||fname,{x:4.1,y:1.45,w:5.5,h:0.9,fontSize:20,bold:true,color:C.navy,align:'left',valign:'top',margin:0});
+
+  // 원문
+  s1.addText(`원문: ${fname}.pdf`,{x:4.1,y:2.45,w:5.5,h:0.28,fontSize:9.5,color:C.gray500,align:'left',margin:0});
+  s1.addShape('rect',{x:4.1,y:2.8,w:5.4,h:0.02,fill:{color:C.gray300},line:{color:C.gray300}});
+
+  s1.addText('분석 일자',{x:4.1,y:2.9,w:1.2,h:0.25,fontSize:8,color:C.gray500,align:'left',margin:0});
+  s1.addText(date,{x:5.4,y:2.9,w:2.5,h:0.25,fontSize:8.5,bold:true,color:C.gray900,align:'left',margin:0});
+  s1.addText('문서 유형',{x:4.1,y:3.2,w:1.2,h:0.25,fontSize:8,color:C.gray500,align:'left',margin:0});
+  s1.addText(docType,{x:5.4,y:3.2,w:4.0,h:0.25,fontSize:8.5,bold:true,color:C.gray900,align:'left',margin:0});
+  s1.addText('분석 깊이',{x:4.1,y:3.5,w:1.2,h:0.25,fontSize:8,color:C.gray500,align:'left',margin:0});
+  s1.addText(depth,{x:5.4,y:3.5,w:4.0,h:0.25,fontSize:8.5,bold:true,color:C.gray900,align:'left',margin:0});
+
+  s1.addShape('rect',{x:4.1,y:4.9,w:2.2,h:0.28,fill:{color:C.gray100},line:{color:C.gray300}});
+  s1.addText('Powered by Claude API',{x:4.1,y:4.9,w:2.2,h:0.28,fontSize:7.5,color:C.gray500,align:'center',valign:'middle',margin:0});
+
+  // ── SLIDE 2: Executive Summary ─────────────────────────────────────────
+  const s2=pptx.addSlide();
+  s2.background={color:C.white};
+  hdr(s2,'01 · 핵심 요약','Executive Summary');
+
+  s2.addShape('rect',{x:0.35,y:0.7,w:9.3,h:0.65,fill:{color:C.tealLight},line:{color:C.teal,pt:0.8},shadow:ms()});
+  s2.addShape('rect',{x:0.35,y:0.7,w:0.07,h:0.65,fill:{color:C.teal},line:{color:C.teal}});
+  s2.addText(r.doc_summary||fname,{x:0.55,y:0.72,w:8.95,h:0.6,fontSize:11,bold:true,color:C.navy,align:'left',valign:'middle',margin:0});
+
+  // 수치 카드 (있을 때)
+  const nums=(r.numbers||[]).slice(0,3);
+  if(nums.length){
+    const cw=9.3/nums.length;
+    nums.forEach((n,i)=>{
+      const cx=0.35+i*cw;
+      s2.addShape('rect',{x:cx,y:1.5,w:cw-0.1,h:1.5,fill:{color:C.white},line:{color:C.gray300,pt:0.8},shadow:ms()});
+      s2.addShape('rect',{x:cx,y:1.5,w:cw-0.1,h:0.38,fill:{color:C.navy},line:{color:C.navy}});
+      s2.addText(n.label,{x:cx+0.1,y:1.52,w:cw-0.3,h:0.34,fontSize:9,color:C.white,align:'center',valign:'middle',margin:0});
+      s2.addText(n.value,{x:cx+0.1,y:1.95,w:cw-0.3,h:0.9,fontSize:20,bold:true,color:C.teal,align:'center',valign:'middle',margin:0});
     });
   }
 
-  // Slide 3 - 핵심 인사이트
-  if(r.key_insights?.length){
+  // 인사이트 요약 (상위 3개)
+  const ins=(r.key_insights||[]).slice(0,3);
+  if(ins.length){
+    const iy=nums.length?3.2:1.6;
+    const cardH=(5.1-iy)/ins.length-0.1;
+    ins.forEach((ins,i)=>{
+      const cy=iy+i*(cardH+0.1);
+      s2.addShape('rect',{x:0.35,y:cy,w:9.3,h:cardH,fill:{color:ins.importance==='high'?C.tealLight:C.gray50},line:{color:ins.importance==='high'?C.teal:C.gray300,pt:0.8},shadow:ms()});
+      s2.addShape('rect',{x:0.35,y:cy,w:0.45,h:cardH,fill:{color:ins.importance==='high'?C.teal:C.navy},line:{color:ins.importance==='high'?C.teal:C.navy}});
+      s2.addText(`${i+1}`,{x:0.35,y:cy,w:0.45,h:cardH,fontSize:11,bold:true,color:C.white,align:'center',valign:'middle',margin:0});
+      s2.addText(ins.title,{x:0.9,y:cy+0.06,w:8.6,h:0.3,fontSize:10,bold:true,color:C.gray900,align:'left',margin:0});
+      s2.addText(ins.body,{x:0.9,y:cy+0.36,w:8.6,h:cardH-0.42,fontSize:8.5,color:C.gray700,align:'left',valign:'top',margin:0});
+    });
+  }
+  ftr(s2,2,total);
+
+  // ── SLIDE 3: 핵심 인사이트 전체 ────────────────────────────────────────
+  const allIns=(r.key_insights||[]);
+  if(allIns.length){
     const s3=pptx.addSlide();
     s3.background={color:C.white};
-    s3.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
-    s3.addText('핵심 인사이트',{x:0.6,y:0.25,w:8,h:0.5,fontSize:20,color:C.dark,bold:true});
-    r.key_insights.slice(0,4).forEach((ins,i)=>{
-      const y=1.0+i*0.95;
-      s3.addShape(pptx.ShapeType.rect,{x:0.6,y,w:0.06,h:0.7,fill:{color:ins.importance==='high'?C.accent:C.teal}});
-      s3.addText(`${i+1}. ${ins.title}`,{x:0.8,y:y+0.02,w:8.6,h:0.3,fontSize:12,color:C.dark,bold:true});
-      s3.addText(ins.body,{x:0.8,y:y+0.32,w:8.6,h:0.55,fontSize:10,color:'555555',wrap:true});
+    hdr(s3,'02 · 인사이트','핵심 인사이트');
+    const rowH=Math.min(1.35,(4.55)/Math.max(allIns.length,1)-0.08);
+    allIns.slice(0,4).forEach((ins,i)=>{
+      const ry=0.72+i*(rowH+0.08);
+      s3.addShape('rect',{x:0.35,y:ry,w:9.3,h:rowH,fill:{color:i%2===0?C.white:C.gray50},line:{color:C.gray300,pt:0.6},shadow:ms()});
+      s3.addShape('rect',{x:0.35,y:ry,w:1.1,h:rowH,fill:{color:ins.importance==='high'?C.teal:C.navy},line:{color:ins.importance==='high'?C.teal:C.navy}});
+      s3.addText(`${i+1}`,{x:0.35,y:ry,w:1.1,h:rowH,fontSize:16,bold:true,color:ins.importance==='high'?C.white:'8BAFD4',align:'center',valign:'middle',margin:0});
+      s3.addText(ins.title,{x:1.6,y:ry+0.1,w:6.4,h:0.35,fontSize:10,bold:true,color:C.gray900,align:'left',margin:0});
+      s3.addText(ins.body,{x:1.6,y:ry+0.45,w:7.5,h:rowH-0.52,fontSize:8.5,color:C.gray700,align:'left',valign:'top',margin:0});
+      // 중요도 뱃지
+      if(ins.importance==='high'){
+        s3.addShape('rect',{x:8.5,y:ry+0.1,w:0.95,h:0.26,fill:{color:C.tealLight},line:{color:C.teal,pt:0.5}});
+        s3.addText('핵심',{x:8.5,y:ry+0.1,w:0.95,h:0.26,fontSize:8,color:C.teal,align:'center',valign:'middle',margin:0});
+      }
+    });
+    ftr(s3,3,total);
+  }
+
+  // ── SLIDE 4: 주요 수치 + 리스크 ───────────────────────────────────────
+  const s4=pptx.addSlide();
+  s4.background={color:C.white};
+  hdr(s4,'03 · 데이터·리스크','주요 수치 및 리스크 요인');
+
+  // 수치 표
+  if((r.numbers||[]).length){
+    const tData=[[
+      {text:'항목',options:{bold:true,color:C.white,fill:{color:C.navy},align:'center'}},
+      {text:'수치 / 내용',options:{bold:true,color:C.white,fill:{color:C.navy},align:'center'}},
+    ]];
+    (r.numbers||[]).slice(0,6).forEach((n,i)=>{
+      tData.push([
+        {text:n.label,options:{fill:{color:i%2===0?C.tealLight:C.white},color:C.teal,bold:true}},
+        {text:n.value,options:{bold:true,color:C.navy}},
+      ]);
+    });
+    s4.addTable(tData,{x:0.35,y:0.72,w:4.4,colW:[2.2,2.2],border:{pt:0.6,color:C.gray300},fontSize:9,color:C.gray900,align:'left',valign:'middle',rowH:0.45});
+  }
+
+  // 리스크 목록
+  if((r.risks||[]).length){
+    s4.addShape('rect',{x:5.1,y:0.72,w:4.55,h:0.38,fill:{color:C.navy},line:{color:C.navy}});
+    s4.addText('리스크 요인',{x:5.2,y:0.72,w:4.35,h:0.38,fontSize:10,bold:true,color:C.white,align:'left',valign:'middle',margin:0});
+    const lc={high:C.red,medium:C.amber,low:'059669'};
+    const lt={high:'높음',medium:'중간',low:'낮음'};
+    (r.risks||[]).slice(0,5).forEach((rk,i)=>{
+      const ry=1.2+i*0.75;
+      s4.addShape('rect',{x:5.1,y:ry,w:4.55,h:0.65,fill:{color:i%2===0?C.white:C.gray50},line:{color:C.gray300,pt:0.6},shadow:ms()});
+      s4.addShape('rect',{x:5.1,y:ry,w:0.7,h:0.65,fill:{color:lc[rk.level]||C.amber},line:{color:lc[rk.level]||C.amber}});
+      s4.addText(lt[rk.level]||rk.level,{x:5.1,y:ry,w:0.7,h:0.65,fontSize:8,bold:true,color:C.white,align:'center',valign:'middle',margin:0});
+      s4.addText(rk.text,{x:5.9,y:ry+0.08,w:3.65,h:0.5,fontSize:8.5,color:C.gray700,align:'left',valign:'top',margin:0});
     });
   }
+  ftr(s4,4,total);
 
-  // Slide 4 - 액션 아이템 + 리스크
-  if(r.action_items?.length||r.risks?.length){
-    const s4=pptx.addSlide();
-    s4.background={color:C.white};
-    s4.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.08,fill:{color:C.accent}});
+  // ── SLIDE 5: 액션 아이템 ──────────────────────────────────────────────
+  const s5=pptx.addSlide();
+  s5.background={color:C.white};
+  hdr(s5,'04 · 액션 아이템','시사점 및 액션 아이템');
 
-    if(r.action_items?.length){
-      s4.addText('액션 아이템',{x:0.6,y:0.25,w:4,h:0.4,fontSize:16,color:C.dark,bold:true});
-      r.action_items.slice(0,5).forEach((a,i)=>{
-        s4.addShape(pptx.ShapeType.rect,{x:0.6,y:0.85+i*0.65,w:4.2,h:0.55,fill:{color:'F0FDF4'},line:{color:'D1FAE5',width:1},rectRadius:0.05});
-        s4.addText('✓',{x:0.7,y:0.88+i*0.65,w:0.3,h:0.4,fontSize:11,color:C.teal,bold:true});
-        s4.addText(a,{x:1.05,y:0.88+i*0.65,w:3.6,h:0.4,fontSize:10,color:C.dark,wrap:true});
-      });
-    }
-    if(r.risks?.length){
-      s4.addText('리스크 요인',{x:5.2,y:0.25,w:4,h:0.4,fontSize:16,color:C.dark,bold:true});
-      const lc={high:C.red,medium:C.amber,low:C.green};
-      const lt={high:'높음',medium:'중간',low:'낮음'};
-      r.risks.slice(0,4).forEach((rk,i)=>{
-        s4.addShape(pptx.ShapeType.rect,{x:5.2,y:0.85+i*0.75,w:4.2,h:0.65,fill:{color:'FAFAFA'},line:{color:'EEEEEE',width:1},rectRadius:0.05});
-        s4.addShape(pptx.ShapeType.rect,{x:5.2,y:0.85+i*0.75,w:0.7,h:0.65,fill:{color:lc[rk.level]||C.amber},rectRadius:0.05});
-        s4.addText(lt[rk.level]||rk.level,{x:5.2,y:0.97+i*0.75,w:0.7,h:0.3,fontSize:9,color:C.white,align:'center',bold:true});
-        s4.addText(rk.text,{x:6.0,y:0.9+i*0.75,w:3.3,h:0.5,fontSize:10,color:C.dark,wrap:true});
-      });
-    }
+  const actions=(r.action_items||[]);
+  if(actions.length){
+    const rowH2=Math.min(1.0,(4.5)/Math.max(actions.length,1)-0.1);
+    actions.slice(0,5).forEach((a,i)=>{
+      const ay=0.72+i*(rowH2+0.1);
+      s5.addShape('rect',{x:0.35,y:ay,w:9.3,h:rowH2,fill:{color:i%2===0?C.white:C.gray50},line:{color:C.gray300,pt:0.6},shadow:ms()});
+      s5.addShape('rect',{x:0.35,y:ay,w:0.5,h:rowH2,fill:{color:C.teal},line:{color:C.teal}});
+      s5.addText('✓',{x:0.35,y:ay,w:0.5,h:rowH2,fontSize:14,bold:true,color:C.white,align:'center',valign:'middle',margin:0});
+      s5.addText(a,{x:1.0,y:ay+0.08,w:8.5,h:rowH2-0.16,fontSize:10,color:C.gray900,align:'left',valign:'middle',margin:0});
+    });
+  } else {
+    s5.addText('액션 아이템이 추출되지 않았습니다.',{x:0.35,y:2.5,w:9.3,h:0.5,fontSize:12,color:C.gray500,align:'center',margin:0});
   }
 
-  pptx.writeFile({fileName:`Battery_Intel_${fname}_${date.replace(/\//g,'')}.pptx`});
+  // 키워드 히트 (있을 때 별도 박스)
+  if(r.keyword_hits&&r.keyword_hits.length>5){
+    s5.addShape('rect',{x:0.35,y:4.6,w:9.3,h:0.65,fill:{color:C.tealLight},line:{color:C.teal,pt:0.8},shadow:ms()});
+    s5.addText('🔍 키워드 관련 내용',{x:0.5,y:4.63,w:9.0,h:0.22,fontSize:8,bold:true,color:C.teal,align:'left',margin:0});
+    s5.addText(r.keyword_hits.substring(0,180)+(r.keyword_hits.length>180?'...':''),{x:0.5,y:4.85,w:9.0,h:0.35,fontSize:7.5,color:C.gray700,align:'left',margin:0});
+  }
+  ftr(s5,5,total);
+
+  pptx.writeFile({fileName:`BatteryIntel_${fname}_${date.replace(/\.\s*/g,'')}.pptx`});
 }
 
   fileData=null;
