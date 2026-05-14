@@ -268,11 +268,27 @@ function buildPrompt(){
 문서 유형: ${typeLabels[selectedType]}
 ${typeInstr[selectedType]}
 요약 깊이: ${depthInstr[depth]}
-${kw?`자사 관련 키워드 [${kw}]가 언급된 내용은 keyword_hits 항목에 별도로 정리하세요.`:''}
+${kw?`자사 관련 키워드 [${kw}]가 언급된 내용은 <keyword_hits> 항목에 별도로 정리하세요.`:''}
 ${extra?`추가 분석 요청: ${extra}`:''}
 
-반드시 아래 JSON 형식으로만 응답하세요. 마크다운 코드블록 없이 순수 JSON만:
-{"doc_summary":"문서 1줄 요약 (40자 이내)","key_insights":[{"title":"인사이트 제목","body":"상세 내용 (수치 포함)","importance":"high|medium"}],"numbers":[{"label":"항목","value":"값"}],"action_items":["액션 아이템"],"risks":[{"level":"high|medium|low","text":"리스크 내용"}],"keyword_hits":"${kw?'키워드 관련 내용':''}"}`;
+반드시 아래 XML 형식으로만 응답하세요. 다른 텍스트 없이 XML만 출력하세요:
+
+<result>
+<doc_summary>문서 1줄 요약 (40자 이내)</doc_summary>
+<numbers>
+<item><label>항목명</label><value>값</value></item>
+</numbers>
+<key_insights>
+<insight importance="high"><title>제목</title><body>상세 내용 (수치 포함)</body></insight>
+</key_insights>
+<action_items>
+<item>액션 아이템 내용</item>
+</action_items>
+<risks>
+<risk level="high"><text>리스크 내용</text></risk>
+</risks>
+<keyword_hits>${kw?'키워드 관련 내용':''}</keyword_hits>
+</result>`;
 }
 
 async function runSummary(){
@@ -302,15 +318,54 @@ async function runSummary(){
     clearInterval(ticker);prog.style.width='100%';
     if(data.error){throw new Error(data.error.message)}
     const raw=data.content.map(i=>i.text||'').join('');
-    const cleaned=raw.replace(/```json|```/g,'').trim();
-    const jsonMatch=cleaned.match(/\{[\s\S]*\}/);
-    const result=JSON.parse(jsonMatch?jsonMatch[0]:cleaned);
+    const result=parseXML(raw);
     renderResult(result);
   }catch(e){
     clearInterval(ticker);
     document.getElementById('resultContent').innerHTML=`<div class="error-msg">오류: ${e.message}<br><small style="opacity:.6;font-size:11px">API 키를 확인하거나 파일을 다시 업로드해주세요.</small></div>`;
   }
   btn.disabled=false;btn.textContent='✦ 다시 분석';
+}
+
+function parseXML(raw){
+  const get=(tag)=>{const m=raw.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`));return m?m[1].trim():''};
+  const getAll=(tag)=>[...raw.matchAll(new RegExp(`<${tag}([^>]*)>([\\s\\S]*?)<\\/${tag}>`, 'g'))];
+  const attr=(str,a)=>{const m=str.match(new RegExp(`${a}="([^"]*)"`));return m?m[1]:''};
+
+  const numbers=getAll('item').filter(m=>raw.indexOf('<numbers>')< raw.indexOf(m[0])).map(m=>({
+    label:get.call(null,'label')||m[2].match(/<label>([\s\S]*?)<\/label>/)?.[1]?.trim()||'',
+    value:m[2].match(/<value>([\s\S]*?)<\/value>/)?.[1]?.trim()||''
+  })).filter(n=>n.label);
+
+  // parse numbers properly
+  const numsBlock=raw.match(/<numbers>([\s\S]*?)<\/numbers>/)?.[1]||'';
+  const numItems=[...numsBlock.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m=>({
+    label:m[1].match(/<label>([\s\S]*?)<\/label>/)?.[1]?.trim()||'',
+    value:m[1].match(/<value>([\s\S]*?)<\/value>/)?.[1]?.trim()||''
+  })).filter(n=>n.label);
+
+  const insights=[...getAll('insight')].map(m=>({
+    importance:attr(m[1],'importance')||'medium',
+    title:m[2].match(/<title>([\s\S]*?)<\/title>/)?.[1]?.trim()||'',
+    body:m[2].match(/<body>([\s\S]*?)<\/body>/)?.[1]?.trim()||''
+  })).filter(i=>i.title);
+
+  const actionsBlock=raw.match(/<action_items>([\s\S]*?)<\/action_items>/)?.[1]||'';
+  const actions=[...actionsBlock.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m=>m[1].trim()).filter(Boolean);
+
+  const risks=[...getAll('risk')].map(m=>({
+    level:attr(m[1],'level')||'medium',
+    text:m[2].match(/<text>([\s\S]*?)<\/text>/)?.[1]?.trim()||m[2].trim()
+  })).filter(r=>r.text);
+
+  return {
+    doc_summary:get('doc_summary'),
+    numbers:numItems,
+    key_insights:insights,
+    action_items:actions,
+    risks:risks,
+    keyword_hits:get('keyword_hits')
+  };
 }
 
 function renderResult(r){
