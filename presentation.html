@@ -134,6 +134,8 @@ input[type=text]::placeholder{color:var(--text3)}
     <div class="api-dot" id="apiDot"></div>
     <span id="apiTxt">미설정</span>
     <button class="api-btn" onclick="openModal()">키 설정</button>
+    <div style="width:0.5px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px"></div>
+    <a href="history.html" style="padding:3px 10px;border-radius:5px;border:0.5px solid var(--border2);color:var(--text3);font-size:10px;text-decoration:none;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗂 히스토리</a>
   </div>
 </nav>
 
@@ -296,6 +298,36 @@ function selectCount(btn) {
 }
 
 // ── API 키 ────────────────────────────────────────────────────────────────────
+
+async function saveToGist(toolName, resultData){
+  const token=localStorage.getItem('github_gist_token');
+  if(!token)return;
+  const entry={
+    id:Date.now(),
+    date:new Date().toISOString(),
+    tool:toolName,
+    result:resultData
+  };
+  try{
+    const listRes=await fetch('https://api.github.com/gists',{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    const gists=await listRes.json();
+    const existing=gists.find(g=>g.description==='battery-intel-history');
+    if(existing){
+      const detailRes=await fetch(`https://api.github.com/gists/${existing.id}`,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+      const detail=await detailRes.json();
+      const current=JSON.parse(detail.files['history.json'].content||'[]');
+      current.unshift(entry);
+      await fetch(`https://api.github.com/gists/${existing.id}`,{method:'PATCH',headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({files:{'history.json':{content:JSON.stringify(current,null,2)}}})});
+    }else{
+      await fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({description:'battery-intel-history',public:false,files:{'history.json':{content:JSON.stringify([entry],null,2)}}})});
+    }
+    const ind=document.createElement('div');
+    ind.style.cssText='position:fixed;bottom:24px;right:24px;background:#1B8A7A;color:white;padding:8px 16px;border-radius:8px;font-size:12px;z-index:999;opacity:1;transition:opacity 1s';
+    ind.textContent='📁 히스토리 저장됨';
+    document.body.appendChild(ind);
+    setTimeout(()=>{ind.style.opacity='0';setTimeout(()=>ind.remove(),1000)},2000);
+  }catch(e){console.warn('히스토리 저장 실패:',e);}
+}
 function checkKey() {
   const k = localStorage.getItem('anthropic_api_key');
   const dot = document.getElementById('apiDot'), txt = document.getElementById('apiTxt');

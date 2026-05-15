@@ -303,6 +303,7 @@ footer {
     BATTERY INTEL
   </div>
   <div class="api-status">
+    <a href="history.html" style="padding:4px 10px;border-radius:6px;border:0.5px solid var(--border2);color:var(--text2);font-size:11px;font-family:var(--mono);text-decoration:none;transition:all .15s;display:flex;align-items:center;gap:5px" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">🗂 히스토리</a>
     <div class="api-dot" id="apiDot"></div>
     <span id="apiStatusText">API 키 미설정</span>
     <button class="api-btn" onclick="openModal()">키 설정</button>
@@ -315,7 +316,7 @@ footer {
   <p class="hero-desc">리튬 메탈 음극재 개발 조직의 기획 업무를 위한 Claude 기반 분석 도구 모음. PDF 요약부터 소재 비교까지, 수작업을 자동화합니다.</p>
   <div class="hero-stats">
     <div class="stat">
-      <span class="stat-val" id="toolCount">4</span>
+      <span class="stat-val" id="toolCount">10</span>
       <span class="stat-label">ACTIVE TOOLS</span>
     </div>
     <div class="stat">
@@ -330,9 +331,10 @@ footer {
 </section>
 
 <section class="section">
-  <div class="section-label">ACTIVE TOOLS</div>
-  <div class="tool-grid">
 
+  <!-- 카테고리: 정보 수집 & 분석 -->
+  <div class="section-label">📥 정보 수집 &amp; 분석</div>
+  <div class="tool-grid">
     <a href="summarizer.html" class="tool-card featured">
       <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
       <span class="tool-icon">📄</span>
@@ -341,12 +343,80 @@ footer {
       <div class="tool-tags">
         <span class="tool-tag">애널리스트 리포트</span>
         <span class="tool-tag">학술 논문</span>
-        <span class="tool-tag">산업 리서치</span>
         <span class="tool-tag">IR</span>
       </div>
       <span class="tool-arrow">↗</span>
     </a>
+    <a href="news.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">📰</span>
+      <div class="tool-name">뉴스 다이제스트</div>
+      <div class="tool-desc">뉴스·리포트 붙여넣기 → 전략적 시사점 중심 요약. 임팩트 등급 분류 및 자사 관점 대응 방안 자동 추출.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">뉴스 요약</span>
+        <span class="tool-tag">산업 동향</span>
+        <span class="tool-tag">시사점</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
+    <a href="compare.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">⚗️</span>
+      <div class="tool-name">소재 사양 비교표</div>
+      <div class="tool-desc">리튬 메탈·흑연·Si계·Si-C 복합 음극재 12개 스펙 비교. 레이더 차트 + 경영진 보고용 인사이트 자동 생성.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">음극재</span>
+        <span class="tool-tag">리튬 메탈</span>
+        <span class="tool-tag">스펙 비교</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
+  </div>
 
+  <!-- 카테고리: 전략 기획 -->
+  <div class="section-label" style="margin-top:2rem">🧠 전략 기획</div>
+  <div class="tool-grid">
+    <a href="swot.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">🔲</span>
+      <div class="tool-name">SWOT/PEST 분석</div>
+      <div class="tool-desc">리서치 자료 입력 → SWOT·PEST 프레임워크 자동 생성. 핵심 시사점 및 전략적 옵션까지 도출.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">SWOT</span>
+        <span class="tool-tag">PEST</span>
+        <span class="tool-tag">전략 프레임워크</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
+    <a href="scenario.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">🎲</span>
+      <div class="tool-name">시나리오 플래닝</div>
+      <div class="tool-desc">핵심 변수 입력 → 낙관·기본·비관 시나리오 자동 도출. 각 시나리오별 선행 지표와 대응 전략까지 설계.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">시나리오</span>
+        <span class="tool-tag">리스크 대응</span>
+        <span class="tool-tag">전략 기획</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
+    <a href="partner.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">🤝</span>
+      <div class="tool-name">파트너십 평가</div>
+      <div class="tool-desc">협력 후보사 정보 입력 → 기술·전략 적합도 자동 스코어링. 장단점 비교 및 협상 포인트까지 도출.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">파트너 평가</span>
+        <span class="tool-tag">스코어링</span>
+        <span class="tool-tag">협상 전략</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
+  </div>
+
+  <!-- 카테고리: 보고 & 커뮤니케이션 -->
+  <div class="section-label" style="margin-top:2rem">📊 보고 &amp; 커뮤니케이션</div>
+  <div class="tool-grid">
     <a href="presentation.html" class="tool-card featured">
       <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
       <span class="tool-icon">📐</span>
@@ -359,35 +429,32 @@ footer {
       </div>
       <span class="tool-arrow">↗</span>
     </a>
-
-    <a href="history.html" class="tool-card featured">
+    <a href="report.html" class="tool-card featured">
       <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
-      <span class="tool-icon">🗂️</span>
-      <div class="tool-name">분석 히스토리</div>
-      <div class="tool-desc">GitHub Gist에 저장된 PDF 분석 기록 조회. 어느 기기에서든 이전 분석 결과, PDF·PPT 다운로드 가능.</div>
+      <span class="tool-icon">📋</span>
+      <div class="tool-name">경영진 보고서</div>
+      <div class="tool-desc">데이터·내용 입력 → 경영진 보고용 문서 초안 자동 생성. 핵심 요약·KPI·의사결정 요청사항까지 구조화.</div>
       <div class="tool-tags">
-        <span class="tool-tag">히스토리</span>
-        <span class="tool-tag">GitHub Gist</span>
-        <span class="tool-tag">크로스 디바이스</span>
-      </div>
-      <span class="tool-arrow">↗</span>
-    </a>
-
-    <a href="compare.html" class="tool-card featured">
-      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
-      <span class="tool-icon">⚗️</span>
-      <div class="tool-name">소재 사양 비교표</div>
-      <div class="tool-desc">리튬 메탈·흑연·Si계·Si-C 복합 음극재 12개 스펙 비교. 레이더 차트 + 경영진 보고용 인사이트 자동 생성.</div>
-      <div class="tool-tags">
-        <span class="tool-tag">음극재</span>
-        <span class="tool-tag">리튬 메탈</span>
-        <span class="tool-tag">스펙 비교</span>
+        <span class="tool-tag">보고서 초안</span>
         <span class="tool-tag">경영진 보고</span>
+        <span class="tool-tag">KPI</span>
       </div>
       <span class="tool-arrow">↗</span>
     </a>
-
+    <a href="meeting.html" class="tool-card featured">
+      <div class="tool-badge badge-active"><span class="badge-dot"></span>ACTIVE</div>
+      <span class="tool-icon">📝</span>
+      <div class="tool-name">회의록 분석기</div>
+      <div class="tool-desc">회의 내용 붙여넣기 → 요약·결정사항·액션 아이템·향후 계획 자동 정리. 담당자·기한·우선순위 자동 추출.</div>
+      <div class="tool-tags">
+        <span class="tool-tag">회의록</span>
+        <span class="tool-tag">액션 아이템</span>
+        <span class="tool-tag">향후 계획</span>
+      </div>
+      <span class="tool-arrow">↗</span>
+    </a>
   </div>
+
 </section>
 
 <section class="section" style="padding-top:0">

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>경영진 보고서 — Battery Intel</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--accent:#7c6cfa;--accent2:#a78bfa;--teal:#2dd4bf;--amber:#fbbf24;--red:#f87171;--text:#f0f0f5;--text2:#9898a8;--text3:#5a5a6e;--sans:'Pretendard',-apple-system,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6;letter-spacing:-0.007em}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:52px;background:rgba(10,10,15,0.9);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border)}
+.back-btn{font-size:12px;color:var(--text2);text-decoration:none;transition:color .15s}.back-btn:hover{color:var(--teal)}
+.topbar-title{font-size:13px;color:var(--text2)}
+.api-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}.api-dot.ok{background:var(--teal)}
+.api-btn{padding:3px 10px;border-radius:5px;border:0.5px solid var(--border2);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;transition:all .15s}.api-btn:hover{border-color:var(--accent);color:var(--accent2)}
+.main{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:2.5rem 2rem 4rem}
+.page-title{font-size:22px;font-weight:600;margin-bottom:6px;letter-spacing:-.02em}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:2rem}
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:14px}
+.card-label{font-size:11px;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card-label span{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.type-grid{display:flex;flex-wrap:wrap;gap:6px}
+.type-btn{padding:5px 12px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-family:var(--sans);cursor:pointer;transition:all .15s}
+.type-btn:hover{border-color:var(--border2)}.type-btn.active{border-color:var(--teal);color:var(--teal);background:rgba(45,212,191,0.06)}
+textarea{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:12px 14px;font-size:13px;font-family:var(--sans);color:var(--text);resize:vertical;outline:none;line-height:1.7;letter-spacing:-0.007em}
+textarea:focus{border-color:var(--teal)}
+textarea::placeholder{color:var(--text3)}
+input[type=text]{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:var(--sans);color:var(--text);outline:none}
+input[type=text]:focus{border-color:var(--teal)}
+input[type=text]::placeholder{color:var(--text3)}
+.run-btn{width:100%;padding:14px;background:var(--teal);border:none;border-radius:10px;color:#0a0a0f;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity .15s;margin-top:6px}
+.run-btn:hover{opacity:.88}.run-btn:disabled{opacity:.4;cursor:not-allowed}
+.progress-wrap{margin-top:1rem;display:none}
+.progress-bar-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-bar{height:100%;background:var(--teal);border-radius:2px;width:0%;transition:width .4s}
+.progress-txt{font-size:11px;color:var(--text3);margin-top:6px;text-align:center}
+.result-section{display:none;margin-top:1.5rem}
+.result-divider{height:0.5px;background:var(--border);margin:1.5rem 0}
+
+/* 보고서 뷰 */
+.report-view{background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:2rem;margin-bottom:1rem}
+.report-title{font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px}
+.report-meta{font-size:11px;color:var(--text3);margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:0.5px solid var(--border)}
+.report-section{margin-bottom:1.5rem}
+.report-section-title{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.04em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.report-section-title::after{content:'';flex:1;height:0.5px;background:rgba(45,212,191,0.15)}
+.report-body{font-size:13px;color:var(--text2);line-height:1.8}
+.report-bullet{display:flex;gap:8px;margin-bottom:6px;font-size:13px;color:var(--text2);line-height:1.6}
+.report-bullet::before{content:'·';color:var(--teal);flex-shrink:0;font-weight:700}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:8px}
+.kpi-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center}
+.kpi-label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.kpi-value{font-size:18px;font-weight:700;color:var(--teal)}
+.kpi-unit{font-size:10px;color:var(--text3)}
+.result-actions{display:flex;gap:8px;margin-top:1.2rem;flex-wrap:wrap}
+.act-btn{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s}
+.act-btn:hover{border-color:var(--teal);color:var(--teal)}
+.error-msg{background:rgba(248,113,113,0.08);border:0.5px solid rgba(248,113,113,0.2);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--red);margin-top:1rem}
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:16px;padding:2rem;width:min(420px,90vw)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+.modal input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:var(--sans);color:var(--text);margin-bottom:12px;outline:none}
+.modal input:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px}
+.btn-primary{flex:1;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-secondary{padding:10px 16px;background:transparent;border:0.5px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer}
+.modal-link{display:block;text-align:center;font-size:11px;color:var(--text3);margin-top:12px;text-decoration:none}
+.modal-link:hover{color:var(--accent2)}
+</style>
+</head>
+<body>
+<nav class="topbar">
+  <a href="index.html" class="back-btn">← 포털로</a>
+  <span class="topbar-title">경영진 보고서</span>
+  <div class="api-indicator">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiTxt">미설정</span>
+    <button class="api-btn" onclick="openModal()">키 설정</button>
+    <div style="width:0.5px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px"></div>
+    <a href="history.html" style="padding:3px 10px;border-radius:5px;border:0.5px solid var(--border2);color:var(--text3);font-size:10px;text-decoration:none;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗂 히스토리</a>
+  </div>
+</nav>
+<main class="main">
+  <h1 class="page-title">경영진 보고서 자동 작성</h1>
+  <p class="page-sub">데이터와 내용을 입력하면 경영진 보고용 문서 초안을 자동으로 생성해드려요.</p>
+
+  <div class="card">
+    <div class="card-label"><span>01</span> · 보고서 유형</div>
+    <div class="type-grid">
+      <button class="type-btn active" data-val="weekly" onclick="selType(this)">주간 업무 보고</button>
+      <button class="type-btn" data-val="monthly" onclick="selType(this)">월간 현황 보고</button>
+      <button class="type-btn" data-val="project" onclick="selType(this)">프로젝트 현황</button>
+      <button class="type-btn" data-val="market" onclick="selType(this)">시장 분석 보고</button>
+      <button class="type-btn" data-val="decision" onclick="selType(this)">의사결정 요청</button>
+      <button class="type-btn" data-val="strategy" onclick="selType(this)">전략 방향 보고</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label"><span>02</span> · 보고서 제목</div>
+    <input type="text" id="reportTitle" placeholder="예: 2026년 5월 리튬 메탈 음극재 개발 현황 및 Q3 전략 방향">
+  </div>
+
+  <div class="card">
+    <div class="card-label"><span>03</span> · 핵심 내용 입력</div>
+    <textarea id="content" rows="12" placeholder="보고서에 담을 내용을 자유롭게 입력해주세요.
+
+예시:
+[현황]
+- TRL 6단계 완료, 에너지 밀도 380Wh/kg 달성 (목표 대비 92%)
+- 수율: 현재 78%, Q3 목표 85%
+- 고객사 A사 파일럿 테스트 진행 중 (6월 결과 확인 예정)
+
+[이슈]
+- 수분 민감도 개선 필요 → 공정 개선안 3가지 검토 중
+- 경쟁사 B사 전고체 배터리 발표 예정 (영향도 분석 필요)
+
+[요청사항]
+- Q3 추가 연구인력 2명 확보 승인 요청
+- A사 파일럿 MOU 체결 권한 위임 요청"></textarea>
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="run()">✦ 보고서 초안 생성</button>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-txt" id="progressTxt">보고서 작성 중...</div>
+  </div>
+  <div id="errorArea"></div>
+
+  <div class="result-section" id="resultSection">
+    <div class="result-divider"></div>
+    <div id="resultContent"></div>
+    <div class="result-actions">
+      <button class="act-btn" onclick="copyResult()">⎘ 텍스트 복사</button>
+      <button class="act-btn" onclick="resetAll()">↺ 초기화</button>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">Anthropic API 키 설정</div>
+    <div class="modal-sub">입력한 키는 이 브라우저에만 저장됩니다.</div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="saveKey()">저장</button>
+    </div>
+    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="modal-link">API 키 발급받기 →</a>
+  </div>
+</div>
+
+<script>
+let reportType='weekly';let _result=null;
+const typeLabels={weekly:'주간 업무 보고',monthly:'월간 현황 보고',project:'프로젝트 현황',market:'시장 분석 보고',decision:'의사결정 요청',strategy:'전략 방향 보고'};
+function selType(btn){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');reportType=btn.dataset.val;}
+
+async function saveToGist(toolName, resultData){
+  const token=localStorage.getItem('github_gist_token');
+  if(!token)return;
+  const entry={
+    id:Date.now(),
+    date:new Date().toISOString(),
+    tool:toolName,
+    result:resultData
+  };
+  try{
+    const listRes=await fetch('https://api.github.com/gists',{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    const gists=await listRes.json();
+    const existing=gists.find(g=>g.description==='battery-intel-history');
+    if(existing){
+      const detailRes=await fetch(`https://api.github.com/gists/${existing.id}`,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+      const detail=await detailRes.json();
+      const current=JSON.parse(detail.files['history.json'].content||'[]');
+      current.unshift(entry);
+      await fetch(`https://api.github.com/gists/${existing.id}`,{method:'PATCH',headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({files:{'history.json':{content:JSON.stringify(current,null,2)}}})});
+    }else{
+      await fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({description:'battery-intel-history',public:false,files:{'history.json':{content:JSON.stringify([entry],null,2)}}})});
+    }
+    const ind=document.createElement('div');
+    ind.style.cssText='position:fixed;bottom:24px;right:24px;background:#1B8A7A;color:white;padding:8px 16px;border-radius:8px;font-size:12px;z-index:999;opacity:1;transition:opacity 1s';
+    ind.textContent='📁 히스토리 저장됨';
+    document.body.appendChild(ind);
+    setTimeout(()=>{ind.style.opacity='0';setTimeout(()=>ind.remove(),1000)},2000);
+  }catch(e){console.warn('히스토리 저장 실패:',e);}
+}
+function checkKey(){const k=localStorage.getItem('anthropic_api_key');const d=document.getElementById('apiDot'),t=document.getElementById('apiTxt');if(k&&k.startsWith('sk-ant')){d.classList.add('ok');t.textContent='연결됨';}else{d.classList.remove('ok');t.textContent='미설정';}}
+function openModal(){const e=localStorage.getItem('anthropic_api_key');if(e)document.getElementById('apiKeyInput').value=e;document.getElementById('modalOverlay').classList.add('show');}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function saveKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v){alert('API 키를 입력해주세요.');return;}localStorage.setItem('anthropic_api_key',v);closeModal();checkKey();}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+async function run(){
+  const key=localStorage.getItem('anthropic_api_key');
+  if(!key){alert('API 키를 먼저 설정해주세요.');openModal();return;}
+  const content=document.getElementById('content').value.trim();
+  if(!content){alert('내용을 입력해주세요.');return;}
+  const title=document.getElementById('reportTitle').value.trim();
+
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('progressWrap').style.display='block';
+  document.getElementById('errorArea').innerHTML='';
+  document.getElementById('resultSection').style.display='none';
+
+  const ticker=setInterval(()=>{const b=document.getElementById('progressBar');const c=parseFloat(b.style.width)||0;if(c<85)b.style.width=(c+Math.random()*8)+'%';},400);
+  const msgs=['내용 분석 중...','보고서 구조 설계 중...','초안 작성 중...','마무리 중...'];
+  let mi=0;const mt=setInterval(()=>{document.getElementById('progressTxt').textContent=msgs[mi%msgs.length];mi++;},1800);
+
+  const prompt=`당신은 이차전지/케미칼 소재 기업의 전략기획 전문가입니다.
+아래 내용을 바탕으로 경영진 보고용 ${typeLabels[reportType]} 초안을 작성해주세요.
+보고서는 간결하고 핵심 중심으로, 경영진이 빠르게 파악할 수 있도록 작성해주세요.
+
+${title?'보고서 제목: '+title:''}
+보고서 유형: ${typeLabels[reportType]}
+
+내용:
+${content}
+
+반드시 아래 JSON 형식으로만 응답하세요. 마크다운 백틱 없이 순수 JSON만:
+{
+  "title": "보고서 제목",
+  "date": "작성일",
+  "type": "${typeLabels[reportType]}",
+  "executive_summary": "핵심 요약 (경영진이 30초 안에 파악할 내용, 2~3문장)",
+  "kpis": [
+    {"label": "KPI명", "value": "수치", "unit": "단위/맥락"}
+  ],
+  "sections": [
+    {
+      "title": "섹션 제목",
+      "content": "섹션 내용 (단락형)",
+      "bullets": ["핵심 포인트1","핵심 포인트2"]
+    }
+  ],
+  "risks": ["리스크/이슈1","리스크/이슈2"],
+  "decisions_needed": ["의사결정 필요 사항1","의사결정 필요 사항2"],
+  "next_steps": ["다음 단계1","다음 단계2","다음 단계3"]
+}
+kpis는 수치 데이터가 있을 때만 포함하세요. decisions_needed는 승인/결정이 필요한 항목만 포함하세요.`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    clearInterval(ticker);clearInterval(mt);
+    document.getElementById('progressBar').style.width='100%';
+    if(data.error)throw new Error(data.error.message);
+    const raw=data.content[0].text.replace(/```json|```/g,'').trim();
+    _result=JSON.parse(raw);
+    renderResult(_result);
+  }catch(e){
+    clearInterval(ticker);clearInterval(mt);
+    document.getElementById('errorArea').innerHTML=`<div class="error-msg">오류: ${e.message}</div>`;
+  }finally{
+    document.getElementById('runBtn').disabled=false;
+    document.getElementById('progressWrap').style.display='none';
+  }
+}
+
+function renderResult(r){
+  const s=document.getElementById('resultSection');s.style.display='block';
+  let html=`<div class="report-view">
+    <div class="report-title">${r.title}</div>
+    <div class="report-meta">${r.type} · ${r.date} · Battery Intel 전략기획</div>`;
+
+  if(r.executive_summary){
+    html+=`<div class="report-section">
+      <div class="report-section-title">핵심 요약</div>
+      <div style="background:rgba(45,212,191,0.05);border:0.5px solid rgba(45,212,191,0.2);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 16px;font-size:13px;color:var(--text2);line-height:1.7">${r.executive_summary}</div>
+    </div>`;
+  }
+
+  if(r.kpis?.length){
+    html+=`<div class="report-section"><div class="report-section-title">주요 지표</div><div class="kpi-grid">`;
+    r.kpis.forEach(k=>html+=`<div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div><div class="kpi-unit">${k.unit}</div></div>`);
+    html+=`</div></div>`;
+  }
+
+  (r.sections||[]).forEach(sec=>{
+    html+=`<div class="report-section"><div class="report-section-title">${sec.title}</div>`;
+    if(sec.content)html+=`<div class="report-body" style="margin-bottom:8px">${sec.content}</div>`;
+    if(sec.bullets?.length)sec.bullets.forEach(b=>html+=`<div class="report-bullet">${b}</div>`);
+    html+=`</div>`;
+  });
+
+  if(r.risks?.length){
+    html+=`<div class="report-section"><div class="report-section-title">리스크 및 이슈</div>`;
+    r.risks.forEach(risk=>html+=`<div class="report-bullet" style="color:var(--red)">${risk}</div>`);
+    html+=`</div>`;
+  }
+
+  if(r.decisions_needed?.length){
+    html+=`<div class="report-section"><div class="report-section-title" style="color:var(--amber)">의사결정 필요 사항</div>`;
+    r.decisions_needed.forEach((d,i)=>html+=`<div style="background:rgba(251,191,36,0.05);border:0.5px solid rgba(251,191,36,0.2);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text2);margin-bottom:6px">📋 ${d}</div>`);
+    html+=`</div>`;
+  }
+
+  if(r.next_steps?.length){
+    html+=`<div class="report-section"><div class="report-section-title">다음 단계</div>`;
+    r.next_steps.forEach((s,i)=>html+=`<div class="report-bullet">${s}</div>`);
+    html+=`</div>`;
+  }
+
+  html+=`</div>`;
+  document.getElementById('resultContent').innerHTML=html;
+  saveToGist('경영진 보고서', r);
+}
+
+function copyResult(){
+  if(!_result)return;
+  const r=_result;
+  let txt=`${r.title}\n${r.type} · ${r.date}\n\n[핵심 요약]\n${r.executive_summary}\n\n`;
+  r.sections?.forEach(s=>{txt+=`[${s.title}]\n${s.content||''}\n`;s.bullets?.forEach(b=>txt+=`- ${b}\n`);txt+='\n';});
+  if(r.decisions_needed?.length){txt+=`[의사결정 필요 사항]\n`;r.decisions_needed.forEach((d,i)=>txt+=`${i+1}. ${d}\n`);}
+  if(r.next_steps?.length){txt+=`\n[다음 단계]\n`;r.next_steps.forEach((s,i)=>txt+=`${i+1}. ${s}\n`);}
+  navigator.clipboard.writeText(txt).then(()=>{const b=document.querySelector('.act-btn');const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1500);});
+}
+function resetAll(){_result=null;document.getElementById('content').value='';document.getElementById('reportTitle').value='';document.getElementById('resultSection').style.display='none';document.getElementById('errorArea').innerHTML='';}
+checkKey();
+</script>
+</body>
+</html>

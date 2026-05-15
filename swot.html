@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SWOT/PEST 분석 — Battery Intel</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--bg:#0a0a0f;--bg2:#111118;--bg3:#18181f;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--accent:#7c6cfa;--accent2:#a78bfa;--teal:#2dd4bf;--amber:#fbbf24;--red:#f87171;--green:#34d399;--text:#f0f0f5;--text2:#9898a8;--text3:#5a5a6e;--sans:'Pretendard',-apple-system,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6;letter-spacing:-0.007em}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+.topbar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:52px;background:rgba(10,10,15,0.9);backdrop-filter:blur(12px);border-bottom:0.5px solid var(--border)}
+.back-btn{font-size:12px;color:var(--text2);text-decoration:none;transition:color .15s}.back-btn:hover{color:var(--teal)}
+.topbar-title{font-size:13px;color:var(--text2)}
+.api-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.api-dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}.api-dot.ok{background:var(--teal)}
+.api-btn{padding:3px 10px;border-radius:5px;border:0.5px solid var(--border2);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;transition:all .15s}.api-btn:hover{border-color:var(--accent);color:var(--accent2)}
+.main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:2.5rem 2rem 4rem}
+.page-title{font-size:22px;font-weight:600;margin-bottom:6px;letter-spacing:-.02em}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:2rem}
+.card{background:var(--bg2);border:0.5px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:14px}
+.card-label{font-size:11px;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card-label span{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.fw-grid{display:flex;gap:8px;flex-wrap:wrap}
+.fw-btn{padding:6px 14px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s}
+.fw-btn:hover{border-color:var(--border2)}.fw-btn.active{border-color:var(--teal);color:var(--teal);background:rgba(45,212,191,0.06)}
+textarea{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:12px 14px;font-size:13px;font-family:var(--sans);color:var(--text);resize:vertical;outline:none;line-height:1.7;letter-spacing:-0.007em}
+textarea:focus{border-color:var(--teal)}
+textarea::placeholder{color:var(--text3)}
+input[type=text]{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:var(--sans);color:var(--text);outline:none}
+input[type=text]:focus{border-color:var(--teal)}
+input[type=text]::placeholder{color:var(--text3)}
+.run-btn{width:100%;padding:14px;background:var(--teal);border:none;border-radius:10px;color:#0a0a0f;font-size:14px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity .15s;margin-top:6px}
+.run-btn:hover{opacity:.88}.run-btn:disabled{opacity:.4;cursor:not-allowed}
+.progress-wrap{margin-top:1rem;display:none}
+.progress-bar-bg{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-bar{height:100%;background:var(--teal);border-radius:2px;width:0%;transition:width .4s}
+.progress-txt{font-size:11px;color:var(--text3);margin-top:6px;text-align:center}
+.result-section{display:none;margin-top:1.5rem}
+.result-divider{height:0.5px;background:var(--border);margin:1.5rem 0}
+
+/* SWOT 그리드 */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+.swot-card{border-radius:10px;padding:1.2rem;border:0.5px solid}
+.swot-card.strength{background:rgba(52,211,153,0.05);border-color:rgba(52,211,153,0.2)}
+.swot-card.weakness{background:rgba(248,113,113,0.05);border-color:rgba(248,113,113,0.2)}
+.swot-card.opportunity{background:rgba(45,212,191,0.05);border-color:rgba(45,212,191,0.2)}
+.swot-card.threat{background:rgba(251,191,36,0.05);border-color:rgba(251,191,36,0.2)}
+.swot-head{font-size:11px;font-weight:600;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.swot-head.strength{color:var(--green)}
+.swot-head.weakness{color:var(--red)}
+.swot-head.opportunity{color:var(--teal)}
+.swot-head.threat{color:var(--amber)}
+.swot-items{list-style:none;display:flex;flex-direction:column;gap:6px}
+.swot-items li{font-size:12px;color:var(--text2);padding:5px 8px;background:rgba(255,255,255,0.03);border-radius:5px;line-height:1.5}
+
+/* PEST 그리드 */
+.pest-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+.pest-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:1.2rem}
+.pest-head{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pest-items{list-style:none;display:flex;flex-direction:column;gap:6px}
+.pest-items li{font-size:12px;color:var(--text2);line-height:1.5;display:flex;gap:6px}
+.pest-items li::before{content:'·';color:var(--text3);flex-shrink:0}
+
+.insight-box{background:rgba(45,212,191,0.05);border:0.5px solid rgba(45,212,191,0.15);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:12px 16px;font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:1rem}
+.section-head{font-size:11px;color:var(--text3);letter-spacing:.08em;margin-bottom:10px;margin-top:1.2rem}
+.result-actions{display:flex;gap:8px;margin-top:1.2rem;flex-wrap:wrap}
+.act-btn{padding:8px 16px;border-radius:8px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s}
+.act-btn:hover{border-color:var(--teal);color:var(--teal)}
+.error-msg{background:rgba(248,113,113,0.08);border:0.5px solid rgba(248,113,113,0.2);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--red);margin-top:1rem}
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:16px;padding:2rem;width:min(420px,90vw)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6}
+.modal input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:var(--sans);color:var(--text);margin-bottom:12px;outline:none}
+.modal input:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px}
+.btn-primary{flex:1;padding:10px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-secondary{padding:10px 16px;background:transparent;border:0.5px solid var(--border2);border-radius:8px;color:var(--text2);font-size:13px;cursor:pointer}
+.modal-link{display:block;text-align:center;font-size:11px;color:var(--text3);margin-top:12px;text-decoration:none}
+.modal-link:hover{color:var(--accent2)}
+</style>
+</head>
+<body>
+<nav class="topbar">
+  <a href="index.html" class="back-btn">← 포털로</a>
+  <span class="topbar-title">SWOT/PEST 분석</span>
+  <div class="api-indicator">
+    <div class="api-dot" id="apiDot"></div>
+    <span id="apiTxt">미설정</span>
+    <button class="api-btn" onclick="openModal()">키 설정</button>
+    <div style="width:0.5px;height:14px;background:rgba(255,255,255,0.15);margin:0 4px"></div>
+    <a href="history.html" style="padding:3px 10px;border-radius:5px;border:0.5px solid var(--border2);color:var(--text3);font-size:10px;text-decoration:none;transition:all .15s" onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗂 히스토리</a>
+  </div>
+</nav>
+<main class="main">
+  <h1 class="page-title">SWOT / PEST 자동 생성</h1>
+  <p class="page-sub">분석 대상과 관련 내용을 입력하면 SWOT·PEST 프레임워크를 자동으로 작성해드려요.</p>
+
+  <div class="card">
+    <div class="card-label"><span>01</span> · 분석 프레임워크</div>
+    <div class="fw-grid">
+      <button class="fw-btn active" data-val="both" onclick="selFw(this)">SWOT + PEST 모두</button>
+      <button class="fw-btn" data-val="swot" onclick="selFw(this)">SWOT만</button>
+      <button class="fw-btn" data-val="pest" onclick="selFw(this)">PEST만</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label"><span>02</span> · 분석 대상</div>
+    <input type="text" id="subject" placeholder="예: 리튬 메탈 음극재 시장 진입 전략 / 자사 소재 사업부 / A사 인수 검토">
+  </div>
+
+  <div class="card">
+    <div class="card-label"><span>03</span> · 관련 정보 입력</div>
+    <textarea id="content" rows="10" placeholder="분석에 활용할 정보를 자유롭게 입력해주세요.
+
+예시:
+- 글로벌 리튬 메탈 음극재 시장 2030년까지 연 45% 성장 전망
+- 당사 습식 공정 기반 원가 경쟁력 보유, 에너지 밀도 경쟁사 대비 95% 수준
+- 주요 경쟁사: A사(미국), B사(일본) - 모두 건식 공정 채택
+- 전고체 배터리 상용화 일정 지연으로 리튬 메탈 수요 확대 전망
+- 핵심 원재료 리튬 공급망 중국 의존도 60% 이상
+- EU 배터리법 2027년 전면 시행 예정"></textarea>
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="run()">✦ 분석 시작</button>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="progress-txt" id="progressTxt">분석 중...</div>
+  </div>
+  <div id="errorArea"></div>
+
+  <div class="result-section" id="resultSection">
+    <div class="result-divider"></div>
+    <div id="resultContent"></div>
+    <div class="result-actions">
+      <button class="act-btn" onclick="copyResult()">⎘ 텍스트 복사</button>
+      <button class="act-btn" onclick="resetAll()">↺ 초기화</button>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">Anthropic API 키 설정</div>
+    <div class="modal-sub">입력한 키는 이 브라우저에만 저장됩니다.</div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="saveKey()">저장</button>
+    </div>
+    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="modal-link">API 키 발급받기 →</a>
+  </div>
+</div>
+
+<script>
+let fw='both';let _result=null;
+function selFw(btn){document.querySelectorAll('.fw-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');fw=btn.dataset.val;}
+
+async function saveToGist(toolName, resultData){
+  const token=localStorage.getItem('github_gist_token');
+  if(!token)return;
+  const entry={
+    id:Date.now(),
+    date:new Date().toISOString(),
+    tool:toolName,
+    result:resultData
+  };
+  try{
+    const listRes=await fetch('https://api.github.com/gists',{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+    const gists=await listRes.json();
+    const existing=gists.find(g=>g.description==='battery-intel-history');
+    if(existing){
+      const detailRes=await fetch(`https://api.github.com/gists/${existing.id}`,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+      const detail=await detailRes.json();
+      const current=JSON.parse(detail.files['history.json'].content||'[]');
+      current.unshift(entry);
+      await fetch(`https://api.github.com/gists/${existing.id}`,{method:'PATCH',headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({files:{'history.json':{content:JSON.stringify(current,null,2)}}})});
+    }else{
+      await fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':`token ${token}`,'Content-Type':'application/json','Accept':'application/vnd.github.v3+json'},body:JSON.stringify({description:'battery-intel-history',public:false,files:{'history.json':{content:JSON.stringify([entry],null,2)}}})});
+    }
+    const ind=document.createElement('div');
+    ind.style.cssText='position:fixed;bottom:24px;right:24px;background:#1B8A7A;color:white;padding:8px 16px;border-radius:8px;font-size:12px;z-index:999;opacity:1;transition:opacity 1s';
+    ind.textContent='📁 히스토리 저장됨';
+    document.body.appendChild(ind);
+    setTimeout(()=>{ind.style.opacity='0';setTimeout(()=>ind.remove(),1000)},2000);
+  }catch(e){console.warn('히스토리 저장 실패:',e);}
+}
+function checkKey(){const k=localStorage.getItem('anthropic_api_key');const d=document.getElementById('apiDot'),t=document.getElementById('apiTxt');if(k&&k.startsWith('sk-ant')){d.classList.add('ok');t.textContent='연결됨';}else{d.classList.remove('ok');t.textContent='미설정';}}
+function openModal(){const e=localStorage.getItem('anthropic_api_key');if(e)document.getElementById('apiKeyInput').value=e;document.getElementById('modalOverlay').classList.add('show');}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function saveKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v){alert('API 키를 입력해주세요.');return;}localStorage.setItem('anthropic_api_key',v);closeModal();checkKey();}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+async function run(){
+  const key=localStorage.getItem('anthropic_api_key');
+  if(!key){alert('API 키를 먼저 설정해주세요.');openModal();return;}
+  const subject=document.getElementById('subject').value.trim();
+  const content=document.getElementById('content').value.trim();
+  if(!subject||!content){alert('분석 대상과 관련 정보를 모두 입력해주세요.');return;}
+
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('progressWrap').style.display='block';
+  document.getElementById('errorArea').innerHTML='';
+  document.getElementById('resultSection').style.display='none';
+
+  const ticker=setInterval(()=>{const b=document.getElementById('progressBar');const c=parseFloat(b.style.width)||0;if(c<85)b.style.width=(c+Math.random()*8)+'%';},400);
+  const msgs=['데이터 분석 중...','강점/약점 도출 중...','기회/위협 파악 중...','전략적 시사점 정리 중...'];
+  let mi=0;const mt=setInterval(()=>{document.getElementById('progressTxt').textContent=msgs[mi%msgs.length];mi++;},1800);
+
+  const fwDesc={both:'SWOT와 PEST 모두',swot:'SWOT만',pest:'PEST만'};
+  const prompt=`당신은 이차전지/케미칼 소재 기업의 전략기획 전문가입니다.
+아래 정보를 바탕으로 ${fwDesc[fw]} 분석해주세요.
+
+분석 대상: ${subject}
+
+관련 정보:
+${content}
+
+반드시 아래 JSON 형식으로만 응답하세요. 마크다운 백틱 없이 순수 JSON만:
+{
+  "subject": "${subject}",
+  "swot": ${fw!=='pest'?`{
+    "strength": ["강점1","강점2","강점3","강점4"],
+    "weakness": ["약점1","약점2","약점3"],
+    "opportunity": ["기회1","기회2","기회3","기회4"],
+    "threat": ["위협1","위협2","위협3"]
+  }`:'null'},
+  "pest": ${fw!=='swot'?`{
+    "political": ["정치·규제 요인1","요인2","요인3"],
+    "economic": ["경제 요인1","요인2","요인3"],
+    "social": ["사회·기술 트렌드1","트렌드2","트렌드3"],
+    "technological": ["기술 요인1","요인2","요인3"]
+  }`:'null'},
+  "key_insights": ["핵심 시사점1","핵심 시사점2","핵심 시사점3"],
+  "strategic_options": ["전략적 옵션1","전략적 옵션2"]
+}`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    clearInterval(ticker);clearInterval(mt);
+    document.getElementById('progressBar').style.width='100%';
+    if(data.error)throw new Error(data.error.message);
+    const raw=data.content[0].text.replace(/```json|```/g,'').trim();
+    _result=JSON.parse(raw);
+    renderResult(_result);
+  }catch(e){
+    clearInterval(ticker);clearInterval(mt);
+    document.getElementById('errorArea').innerHTML=`<div class="error-msg">오류: ${e.message}</div>`;
+  }finally{
+    document.getElementById('runBtn').disabled=false;
+    document.getElementById('progressWrap').style.display='none';
+  }
+}
+
+function renderResult(r){
+  const s=document.getElementById('resultSection');s.style.display='block';
+  let html=`<div style="font-size:16px;font-weight:600;margin-bottom:1.2rem">${r.subject}</div>`;
+
+  if(r.swot){
+    html+=`<div class="section-head">SWOT 분석</div><div class="swot-grid">`;
+    const cells=[
+      {key:'strength',label:'S · 강점',cls:'strength'},
+      {key:'weakness',label:'W · 약점',cls:'weakness'},
+      {key:'opportunity',label:'O · 기회',cls:'opportunity'},
+      {key:'threat',label:'T · 위협',cls:'threat'},
+    ];
+    cells.forEach(c=>{
+      html+=`<div class="swot-card ${c.cls}"><div class="swot-head ${c.cls}">${c.label}</div><ul class="swot-items">`;
+      (r.swot[c.key]||[]).forEach(item=>html+=`<li>${item}</li>`);
+      html+=`</ul></div>`;
+    });
+    html+=`</div>`;
+  }
+
+  if(r.pest){
+    html+=`<div class="section-head">PEST 분석</div><div class="pest-grid">`;
+    const pcells=[
+      {key:'political',label:'P · 정치·규제'},
+      {key:'economic',label:'E · 경제'},
+      {key:'social',label:'S · 사회·문화'},
+      {key:'technological',label:'T · 기술'},
+    ];
+    pcells.forEach(c=>{
+      html+=`<div class="pest-card"><div class="pest-head">${c.label}</div><ul class="pest-items">`;
+      (r.pest[c.key]||[]).forEach(item=>html+=`<li>${item}</li>`);
+      html+=`</ul></div>`;
+    });
+    html+=`</div>`;
+  }
+
+  if(r.key_insights?.length){
+    html+=`<div class="section-head">핵심 시사점</div>`;
+    r.key_insights.forEach(i=>html+=`<div class="insight-box" style="margin-bottom:8px">${i}</div>`);
+  }
+
+  if(r.strategic_options?.length){
+    html+=`<div class="section-head">전략적 옵션</div>`;
+    r.strategic_options.forEach((o,i)=>html+=`<div class="insight-box" style="margin-bottom:8px;border-left-color:var(--accent2)">${i+1}. ${o}</div>`);
+  }
+
+  document.getElementById('resultContent').innerHTML=html;
+  saveToGist('SWOT/PEST 분석', r);
+}
+
+function copyResult(){
+  if(!_result)return;
+  const r=_result;let txt=`[${r.subject}]\n\n`;
+  if(r.swot){txt+=`[SWOT]\nS(강점):\n`;r.swot.strength?.forEach(i=>txt+=`- ${i}\n`);txt+=`\nW(약점):\n`;r.swot.weakness?.forEach(i=>txt+=`- ${i}\n`);txt+=`\nO(기회):\n`;r.swot.opportunity?.forEach(i=>txt+=`- ${i}\n`);txt+=`\nT(위협):\n`;r.swot.threat?.forEach(i=>txt+=`- ${i}\n`);txt+='\n';}
+  if(r.pest){txt+=`[PEST]\nP:\n`;r.pest.political?.forEach(i=>txt+=`- ${i}\n`);txt+=`E:\n`;r.pest.economic?.forEach(i=>txt+=`- ${i}\n`);txt+=`S:\n`;r.pest.social?.forEach(i=>txt+=`- ${i}\n`);txt+=`T:\n`;r.pest.technological?.forEach(i=>txt+=`- ${i}\n`);txt+='\n';}
+  if(r.key_insights?.length){txt+=`[핵심 시사점]\n`;r.key_insights.forEach((i,n)=>txt+=`${n+1}. ${i}\n`);}
+  navigator.clipboard.writeText(txt).then(()=>{const b=document.querySelector('.act-btn');const o=b.textContent;b.textContent='✓ 복사됨';setTimeout(()=>b.textContent=o,1500);});
+}
+function resetAll(){_result=null;document.getElementById('content').value='';document.getElementById('subject').value='';document.getElementById('resultSection').style.display='none';document.getElementById('errorArea').innerHTML='';}
+checkKey();
+</script>
+</body>
+</html>

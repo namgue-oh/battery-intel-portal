@@ -225,9 +225,9 @@ function renderHistory(history, gistId, token){
     card.innerHTML=`
       <div class="hist-header">
         <div class="hist-meta">
-          <div class="hist-fname">📄 ${entry.fname||'알 수 없는 파일'}</div>
+          <div class="hist-fname">${(()=>{const icons={'PDF 보고서 요약기':'📄','회의록 분석기':'📝','SWOT/PEST 분석':'🔲','시나리오 플래닝':'🎲','뉴스 다이제스트':'📰','경영진 보고서':'📋','파트너십 평가':'🤝','발표 자료 구조화':'📐'};return (icons[entry.tool]||'📁')+' '+(entry.fname||entry.tool||'알 수 없음');})()}</div>
           <div class="hist-tags">
-            <span class="hist-tag type">${entry.docType||'보고서'}</span>
+            <span class="hist-tag type">${entry.tool||entry.docType||'분석'}</span>
             ${r.numbers?.length?`<span class="hist-tag">수치 ${r.numbers.length}개</span>`:''}
             ${r.key_insights?.length?`<span class="hist-tag">인사이트 ${r.key_insights.length}개</span>`:''}
             ${r.action_items?.length?`<span class="hist-tag">액션 ${r.action_items.length}개</span>`:''}
